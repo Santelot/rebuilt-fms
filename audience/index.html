@@ -191,10 +191,114 @@
     .audio-tests{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}.audio-tests button{font-size:10px;padding:8px 4px;background:#253447}
     .broadcast-hint{position:absolute;right:8px;bottom:8px;z-index:45;color:rgba(255,255,255,.45);font-size:9px;text-shadow:0 1px 2px #000}.audio-pill{position:absolute;left:8px;bottom:8px;z-index:45;background:rgba(0,0,0,.55);color:#fff;font-size:9px;padding:5px 7px;border:1px solid rgba(255,255,255,.18);display:none}.audio-pill.show{display:block}
 
+    /* =========================================================
+       BROADCAST RESPONSIVE / AUDIENCE SCALE
+       Typography intentionally mixes rem + viewport units. rem makes
+       browser zoom meaningful again while viewport units keep the layout
+       fluid across 720p / 1080p / 1440p / ultrawide canvases.
+       ========================================================= */
+    html{font-size:17.6px}
+    :root{
+      --preview-top-h:clamp(2.75rem,5.2vh,3.5rem);
+      --preview-footer-h:clamp(3rem,6.2vh,4rem);
+      --results-top:clamp(3.9rem,6.7vh,5.1rem);
+      --results-footer:clamp(5.5rem,10.4vh,7.6rem);
+    }
+
+    /* Universal overflow guards for broadcast cells. */
+    .top-center,.footer-event,.live-title,.results-title,.winner-word,.high-score span,.rank-title,
+    .preview-team-id,.preview-team-name,.live-team-id,.result-team-id,.progress-value,
+    .break-row span,.result-detail-note{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+    .top-center,.footer-event,.live-title,.results-title,.winner-word,.high-score span,.rank-title,
+    .preview-team-id,.preview-team-name,.live-team-id,.result-team-id,.progress-value,.result-detail-note{white-space:nowrap}
+    .live-score b,.match-time,.shift-data,.result-score b,.break-row .left,.break-row .right,.rank-box,.result-rank{font-variant-numeric:tabular-nums}
+
+    /* Preview */
+    .top-strip{height:var(--preview-top-h);grid-template-columns:clamp(7.8rem,13vw,11rem) minmax(0,1fr) clamp(7.4rem,12vw,10rem)}
+    .top-left,.top-center{font-size:clamp(.95rem,calc(.72rem + .38vw),1.5rem)}
+    .top-left{padding-inline:clamp(.6rem,1.1vw,1rem)}
+    .top-right{padding:clamp(.2rem,.55vh,.42rem) clamp(.55rem,1.15vw,1rem)}
+    .preview-body{inset:var(--preview-top-h) 0 var(--preview-footer-h);grid-template-columns:minmax(0,1fr) clamp(3.5rem,6vw,5.2rem) minmax(0,1fr);padding-inline:clamp(.45rem,1vw,.9rem)}
+    .preview-side.red{padding-right:clamp(.7rem,2.1vw,2rem)}.preview-side.blue{padding-left:clamp(.7rem,2.1vw,2rem)}
+    .preview-list{gap:clamp(.42rem,1.05vh,.75rem)}
+    .preview-team{height:clamp(3.45rem,7.1vh,4.65rem);grid-template-columns:minmax(0,1fr) clamp(2rem,3.1vw,2.7rem)}
+    .preview-team-main{grid-template-rows:1fr 1fr}
+    .preview-numberline{grid-template-columns:clamp(1.6rem,2.35vw,2.25rem) minmax(0,1fr) auto;padding:0 clamp(.4rem,.7vw,.65rem);gap:clamp(.25rem,.42vw,.5rem);font-size:clamp(.92rem,calc(.72rem + .34vw),1.35rem)}
+    .preview-team-id{display:block}
+    .avatar{width:clamp(1.35rem,2.15vw,1.8rem);height:clamp(1.35rem,2.15vw,1.8rem);font-size:.55rem}.avatar::before{font-size:.43rem}
+    .preview-team-name{padding-inline:clamp(.35rem,.58vw,.55rem);font-size:clamp(.95rem,calc(.73rem + .36vw),1.4rem)}
+    .rank-box{font-size:clamp(.88rem,calc(.68rem + .28vw),1.2rem)}
+    .card-chip{padding:.08rem clamp(.38rem,.7vw,.68rem);font-size:clamp(.54rem,calc(.44rem + .15vw),.72rem);line-height:1.35}
+    .vs{width:clamp(3.35rem,5vw,4.5rem);height:clamp(2.8rem,5.8vh,3.55rem);font-size:clamp(1.65rem,calc(1.25rem + .72vw),2.45rem)}
+    .preview-footer{height:var(--preview-footer-h);grid-template-columns:clamp(7.8rem,14vw,10.5rem) minmax(0,1fr)}
+    .footer-frc{height:100%;padding:.28rem clamp(.55rem,1vw,.85rem)}
+    .footer-event{font-size:clamp(.88rem,calc(.68rem + .31vw),1.28rem);padding-left:clamp(.45rem,.75vw,.75rem)}
+
+    /* Live scoreboard */
+    .live-scoreboard{height:clamp(8.7rem,calc(6.7rem + 5.4vh),12.6rem)}
+    .live-title{font-size:clamp(1rem,calc(.9rem + .55vw),1.85rem);padding-inline:.35rem}
+    .live-main{grid-template-columns:minmax(0,32.3%) minmax(4.6rem,11.85%) minmax(5rem,11.7%) minmax(4.6rem,11.85%) minmax(0,32.3%)}
+    .live-team-row{font-size:clamp(.88rem,calc(.78rem + .38vw),1.45rem);padding-inline:2%;gap:1.5%}
+    .live-team{min-width:0;overflow:hidden;gap:.32em;padding-inline:.15em}
+    .live-team-id{display:block;flex:1 1 auto;text-align:center}
+    .live-bottom{gap:2%;padding-inline:clamp(.45rem,3.8%,1.2rem)}
+    .live-progress{min-width:42%;font-size:clamp(.95rem,calc(.9rem + .5vw),1.65rem)}
+    .progress-value{padding-inline:clamp(.35rem,.62em,.7rem)}
+    .live-score span{font-size:clamp(.78rem,calc(.72rem + .26vw),1.2rem);margin-bottom:1%}
+    .live-score b{font-size:clamp(2.55rem,calc(2.18rem + 2.02vw),5.55rem);line-height:.88;letter-spacing:-.035em;max-width:100%;overflow:hidden}
+    .shift-data{font-size:clamp(.8rem,calc(.85rem + .42vw),1.5rem)}
+    .match-time{font-size:clamp(2.15rem,calc(2.05rem + 1.55vw),4.75rem);letter-spacing:-.045em}
+    .review-panel{font-size:clamp(.76rem,calc(.78rem + .5vw),1.48rem);gap:2%;padding:.15rem;flex-direction:column;text-align:center}.review-panel .whistle-icon{width:20%;max-width:34px}
+    .count-stage{width:min(29vw,18rem)}
+    .count-number{font-size:min(18vw,11rem)}
+    .count-caption{top:calc(50% + min(15vw,9.4rem));font-size:clamp(.85rem,calc(.8rem + .45vw),1.45rem)}
+
+    /* Results */
+    .results-title{font-size:clamp(1rem,calc(.9rem + .58vw),1.85rem);padding-inline:.35rem}
+    .result-score span{font-size:clamp(.78rem,calc(.85rem + .35vw),1.35rem)}
+    .result-score b{font-size:clamp(3rem,calc(2.75rem + 2.75vw),6.7rem);line-height:.86;letter-spacing:-.04em;max-width:100%;overflow:hidden}
+    .break-section{font-size:clamp(.72rem,calc(.72rem + .3vw),1.18rem)}
+    .break-row{font-size:clamp(.95rem,calc(.9rem + .5vw),1.72rem)}
+    .break-row .label{font-size:clamp(.7rem,calc(.72rem + .3vw),1.16rem)}
+    .winner-slot{font-size:clamp(1.6rem,calc(1.5rem + 1.7vw),4rem);gap:4%}
+    .high-score{font-size:clamp(.7rem,calc(.72rem + .42vw),1.28rem);padding-inline:4%}
+    .star{font-size:clamp(1rem,calc(1rem + .8vw),2.2rem)}
+    .result-team{height:clamp(2.75rem,8.8vh,4.05rem);max-height:none;min-height:0;grid-template-columns:minmax(0,1fr) clamp(2.65rem,15%,4.3rem)}
+    .result-team-main{font-size:clamp(.9rem,calc(.95rem + .5vw),1.65rem);gap:2%;padding-inline:2%}
+    .result-team-id{display:block;flex:1 1 auto}
+    .result-avatar{flex:0 0 auto}
+    .result-card{flex:0 0 auto;margin-left:.2rem;white-space:nowrap}
+    .result-rank{font-size:clamp(.72rem,calc(.61rem + .27vw),1.23rem)}
+    .rank-title{font-size:clamp(.78rem,calc(.8rem + .4vw),1.35rem)}
+    .results-powered{font-size:clamp(.92rem,calc(.9rem + .85vw),2.15rem)}
+    .result-detail-note{font-size:clamp(.55rem,calc(.52rem + .2vw),.86rem);max-width:92%;text-align:center}
+
+    /* Setup scale control */
+    .setup-card{width:min(48rem,94vw);padding:clamp(1rem,2.4vw,1.45rem)}
+    .setup-card h2{font-size:clamp(1.25rem,calc(1.05rem + .45vw),1.7rem)}
+    .setup-card p{font-size:clamp(.78rem,calc(.69rem + .18vw),.98rem)}
+    .setup-card input,.setup-card select,.setup-card button{font-size:clamp(.76rem,calc(.68rem + .14vw),.95rem)}
+    .setup-status{font-size:.72rem}.setup-note{font-size:.66rem}.audio-tests button{font-size:.67rem}
+    .scale-control{margin-top:.62rem;border:1px solid #34465f;border-radius:.6rem;background:#0b121a;padding:.72rem .82rem}
+    .scale-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.52rem}
+    .scale-head label{font-size:.82rem;font-weight:900}.scale-value{font-size:.92rem;font-weight:1000;color:var(--yellow);min-width:3.3rem;text-align:right}
+    .scale-control input[type=range]{width:100%;padding:0;accent-color:var(--yellow)}
+    .scale-presets{display:grid;grid-template-columns:repeat(5,1fr);gap:.38rem;margin-top:.55rem}
+    .scale-presets button{padding:.48rem .35rem;background:#253447}
+    .scale-help{margin-top:.45rem;color:#8ea3ba;font-size:.64rem;line-height:1.4}
+    .broadcast-hint,.audio-pill{font-size:.58rem}
+
     @media(max-width:980px){
-      :root{--live-h:15.2vh}
-      .preview-team-name{font-size:15px}
+      .preview-side.red{padding-right:.6rem}.preview-side.blue{padding-left:.6rem}
+      .preview-team-name{font-size:clamp(.86rem,calc(.78rem + .28vw),1.1rem)}
       .audio-tests{grid-template-columns:repeat(3,1fr)}
+    }
+    @media(max-width:700px){
+      .live-avatar{display:none}
+      .live-team{padding-inline:.08rem}
+      .progress-icon{display:none}
+      .live-progress{min-width:54%;justify-content:center}
+      .scale-presets{grid-template-columns:repeat(3,1fr)}
     }
   </style>
 </head>
@@ -342,6 +446,19 @@
       <div class="setup-grid three"><input id="energizedInput" type="number" min="1" value="100" title="Energized threshold"><input id="superchargedInput" type="number" min="1" value="360" title="Supercharged threshold"><button class="secondary" onclick="saveDisplayPrefs()">Save thresholds</button></div>
       <div class="setup-grid"><select id="cameraFit"><option value="cover">Camera: Crop / Fill</option><option value="contain">Camera: Fit Entire Frame</option></select><button class="secondary" onclick="toggleFullscreen()">Fullscreen</button></div>
 
+      <div class="scale-control">
+        <div class="scale-head"><label for="displayScaleInput">Audience UI Scale</label><span id="displayScaleValue" class="scale-value">110%</span></div>
+        <input id="displayScaleInput" type="range" min="85" max="140" step="5" value="110" aria-label="Audience UI scale">
+        <div class="scale-presets">
+          <button class="secondary" onclick="setDisplayScale(90,true)">90%</button>
+          <button class="secondary" onclick="setDisplayScale(100,true)">100%</button>
+          <button class="secondary" onclick="setDisplayScale(110,true)">110%</button>
+          <button class="secondary" onclick="setDisplayScale(120,true)">120%</button>
+          <button class="secondary" onclick="setDisplayScale(130,true)">130%</button>
+        </div>
+        <div class="scale-help">Text now uses zoom-friendly rem + viewport sizing. Use this control for deliberate broadcast enlargement; the layout will shrink only the few labels that truly run out of room instead of letting them overlap.</div>
+      </div>
+
       <div class="setup-note">
         <b>2026 cue mapping:</b> the manual confirms the cue names/timing, but FIRST does not publish the audio files on the public season page. This build uses a separate 2026 community cue pack for the five match sounds below; test each one here before going live. No file is labeled “official” unless FIRST publishes it directly.
       </div>
@@ -361,7 +478,7 @@
     </div>
   </div>
 
-  <div class="broadcast-hint">C setup · F fullscreen · M audio</div>
+  <div class="broadcast-hint">C setup · F fullscreen · M audio · [ / ] UI scale</div>
   <div id="audioPill" class="audio-pill">AUDIO MUTED</div>
 </div>
 
@@ -417,10 +534,10 @@
     const cls=c.red?'red-card':'',label=c.red?'RED CARD':c.yellow>1?`CARD ×${c.yellow}`:'CARD';
     return `<span class="${kind==='result'?'result-card':'card-chip'} ${cls}">${label}</span>`
   }
-  function previewRows(teams,alliance,s=lastState){return (teams||[]).map(t=>`<div class="preview-team ${alliance}"><div class="preview-team-main"><div class="preview-numberline"><span class="avatar"></span><span>${escapeHtml(t||'—')}</span>${cardChip(t,s)}</div><div class="preview-team-name">${escapeHtml(teamName(t,s))}</div></div><div class="rank-box">${rankFor(t,s)}</div></div>`).join('')}
-  function liveTeams(teams,s=lastState){return (teams||[]).map(t=>{const c=cardInfo(t,s),cls=c.red?'red-carded':c.yellow?'carded':'';return `<span class="live-team ${cls}"><i class="live-avatar">F</i>${escapeHtml(t||'—')}</span>`}).join('')}
+  function previewRows(teams,alliance,s=lastState){return (teams||[]).map(t=>`<div class="preview-team ${alliance}"><div class="preview-team-main"><div class="preview-numberline"><span class="avatar"></span><span class="preview-team-id">${escapeHtml(t||'—')}</span>${cardChip(t,s)}</div><div class="preview-team-name">${escapeHtml(teamName(t,s))}</div></div><div class="rank-box">${rankFor(t,s)}</div></div>`).join('')}
+  function liveTeams(teams,s=lastState){return (teams||[]).map(t=>{const c=cardInfo(t,s),cls=c.red?'red-carded':c.yellow?'carded':'';return `<span class="live-team ${cls}"><i class="live-avatar">F</i><span class="live-team-id">${escapeHtml(t||'—')}</span></span>`}).join('')}
   function resultRows(teams,alliance,s=lastState){
-    return (teams||[]).map(t=>`<div class="result-team"><div class="result-team-main"><span class="result-avatar">FRC</span><span>${escapeHtml(t||'—')}</span>${cardChip(t,s,'result')}</div><div class="result-rank"><span>${rankFor(t,s)}</span><span>${moveFor(t,s)}</span></div></div>`).join('')
+    return (teams||[]).map(t=>`<div class="result-team"><div class="result-team-main"><span class="result-avatar">FRC</span><span class="result-team-id">${escapeHtml(t||'—')}</span>${cardChip(t,s,'result')}</div><div class="result-rank"><span>${rankFor(t,s)}</span><span>${moveFor(t,s)}</span></div></div>`).join('')
   }
 
   function thresholds(s=lastState){let e=Math.max(1,Number(s?.balance?.energizedThreshold)||Number($('energizedInput').value)||100),sp=Math.max(e+1,Number(s?.balance?.superchargedThreshold)||Number($('superchargedInput').value)||360);return{energized:e,supercharged:sp}}
@@ -496,6 +613,7 @@
     handleAudio(previousPhase,s.phase,previousTime,t,s);
 
     if(previousScreen!==s.screen&&s.screen==='RESULTS')startResultsReveal(s);
+    requestAnimationFrame(fitCriticalText);
 
     lastScreen=s.screen;lastPhase=s.phase;lastPeriod=s.period;lastCountdown=s.countdown;lastMatchTime=t;
   }
@@ -594,16 +712,59 @@
   async function enumerateCameras(){try{const devices=await navigator.mediaDevices.enumerateDevices(),cams=devices.filter(d=>d.kind==='videoinput');$('cameraSelect').innerHTML=cams.map((c,i)=>`<option value="${c.deviceId}">${escapeHtml(c.label||`Camera ${i+1}`)}</option>`).join('')||'<option>No cameras found</option>'}catch(e){$('setupStatus').textContent=`Camera list: ${e.message}`}}
   async function startCamera(){try{if(stream)stream.getTracks().forEach(t=>t.stop());const id=$('cameraSelect').value;stream=await navigator.mediaDevices.getUserMedia({video:id?{deviceId:{exact:id},width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:60,max:60}}:{width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:60,max:60}},audio:false});$('camera').srcObject=stream;$('camera').classList.remove('empty');applyCameraFit();await enumerateCameras();$('setupStatus').textContent='Camera live · FMS audio armed.'}catch(e){$('setupStatus').textContent=`Camera: ${e.message}`}}
   function applyCameraFit(){$('camera').classList.toggle('contain',$('cameraFit').value==='contain')}
-  function saveDisplayPrefs(){const th=thresholds();$('energizedInput').value=th.energized;$('superchargedInput').value=th.supercharged;localStorage.setItem('rebuiltAudiencePrefs',JSON.stringify({energized:th.energized,supercharged:th.supercharged,fit:$('cameraFit').value}));applyCameraFit();if(lastState)render(lastState)}
-  function loadDisplayPrefs(){try{const p=JSON.parse(localStorage.getItem('rebuiltAudiencePrefs')||'null');if(!p)return;if(p.energized)$('energizedInput').value=p.energized;if(p.supercharged)$('superchargedInput').value=p.supercharged;if(p.fit)$('cameraFit').value=p.fit}catch(_){}}
+
+  const DISPLAY_SCALE_DEFAULT=110;
+  function normalizeDisplayScale(value){const n=Number(value);return Math.max(85,Math.min(140,Number.isFinite(n)?Math.round(n/5)*5:DISPLAY_SCALE_DEFAULT))}
+  function setDisplayScale(value,persist=false){
+    const pct=normalizeDisplayScale(value),input=$('displayScaleInput'),label=$('displayScaleValue');
+    document.documentElement.style.fontSize=`${(16*pct/100).toFixed(2)}px`;
+    if(input)input.value=String(pct);if(label)label.textContent=`${pct}%`;
+    requestAnimationFrame(fitCriticalText);
+    if(persist)saveDisplayPrefs();
+  }
+  function nudgeDisplayScale(delta){setDisplayScale(normalizeDisplayScale($('displayScaleInput')?.value||DISPLAY_SCALE_DEFAULT)+delta,true)}
+
+  function fitTextElement(el,minPx=10){
+    if(!el||el.clientWidth<=0||el.clientHeight<=0)return;
+    el.style.removeProperty('font-size');
+    let size=parseFloat(getComputedStyle(el).fontSize),guard=0;
+    if(!Number.isFinite(size))return;
+    while((el.scrollWidth>el.clientWidth+1||el.scrollHeight>el.clientHeight+1)&&size>minPx&&guard++<30){size-=.5;el.style.fontSize=`${size}px`}
+  }
+  function fitCriticalText(){
+    ['previewMatchLabel','liveMatchLabel','resultsMatchLabel','previewEvent'].forEach(id=>fitTextElement($(id),11));
+    ['redLiveScore','blueLiveScore','liveTimer','shiftIndex','shiftRemain','redProgressText','blueProgressText','redResultScore','blueResultScore'].forEach(id=>fitTextElement($(id),10));
+    document.querySelectorAll('.high-score span:nth-child(2),.winner-word').forEach(el=>fitTextElement(el,10));
+  }
+
+  function saveDisplayPrefs(){
+    const th=thresholds(),displayScale=normalizeDisplayScale($('displayScaleInput')?.value||DISPLAY_SCALE_DEFAULT);
+    $('energizedInput').value=th.energized;$('superchargedInput').value=th.supercharged;
+    localStorage.setItem('rebuiltAudiencePrefs',JSON.stringify({energized:th.energized,supercharged:th.supercharged,fit:$('cameraFit').value,displayScale}));
+    applyCameraFit();setDisplayScale(displayScale,false);if(lastState)render(lastState)
+  }
+  function loadDisplayPrefs(){
+    let displayScale=DISPLAY_SCALE_DEFAULT;
+    try{const p=JSON.parse(localStorage.getItem('rebuiltAudiencePrefs')||'null');if(p){if(p.energized)$('energizedInput').value=p.energized;if(p.supercharged)$('superchargedInput').value=p.supercharged;if(p.fit)$('cameraFit').value=p.fit;if(p.displayScale)displayScale=p.displayScale}}catch(_){}
+    setDisplayScale(displayScale,false)
+  }
   function enterBroadcast(){ensureAudio();saveDisplayPrefs();$('setup').classList.add('hidden');resetCursorTimer()}
   function showSetup(){$('setup').classList.remove('hidden');document.body.classList.remove('cursor-hidden')}
   function toggleFullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()}
   function resetCursorTimer(){document.body.classList.remove('cursor-hidden');clearTimeout(cursorTimer);if($('setup').classList.contains('hidden'))cursorTimer=setTimeout(()=>document.body.classList.add('cursor-hidden'),2500)}
 
   document.addEventListener('mousemove',resetCursorTimer);
-  document.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='c')showSetup();if(k==='f')toggleFullscreen();if(k==='m')toggleAudio();if(e.key==='Escape'&&$('setup').classList.contains('hidden'))showSetup()});
+  document.addEventListener('keydown',e=>{
+    const k=e.key.toLowerCase(),editing=/^(input|select|textarea)$/i.test(document.activeElement?.tagName||'');
+    if(!editing&&k==='c')showSetup();if(!editing&&k==='f')toggleFullscreen();if(!editing&&k==='m')toggleAudio();
+    if(!editing&&e.key==='[')nudgeDisplayScale(-5);if(!editing&&e.key===']')nudgeDisplayScale(5);
+    if(e.key==='Escape'&&$('setup').classList.contains('hidden'))showSetup()
+  });
   $('cameraFit').addEventListener('change',applyCameraFit);
+  $('displayScaleInput').addEventListener('input',e=>setDisplayScale(e.target.value,false));
+  $('displayScaleInput').addEventListener('change',()=>saveDisplayPrefs());
+  window.addEventListener('resize',()=>requestAnimationFrame(fitCriticalText));
+  if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>requestAnimationFrame(fitCriticalText));
 
   function demoState(kind){
     const base={
