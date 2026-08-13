@@ -3,475 +3,631 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#081018" />
-  <title>REBUILT FMS Backstage</title>
+  <meta name="theme-color" content="#0c161f" />
+  <title>REBUILT Audience Display</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
     :root{
-      --bg:#070b10;--panel:#101821;--panel2:#0b1219;--panel3:#141f2b;--line:#263649;
-      --text:#f4f7fb;--muted:#889bb1;--red:#ed1c2e;--red2:#8e0d18;--blue:#0878bd;--blue2:#064a76;
-      --yellow:#ffe600;--green:#20d98a;--orange:#ff9f43;--danger:#b61e34;--white:#f5f6f7;
+      --red:#ef1e2f;--red-dark:#970f18;--red-deep:#890d15;
+      --blue:#0878bb;--blue-dark:#064e7e;--blue-deep:#074a76;
+      --ink:#0c161f;--paper:#f4f4f3;--gray:#d2d2d2;
+      --yellow:#ffe600;--white:#fff;--black:#0a0a0a;
+      --live-h:16vh;
+      --results-top:6.7vh;
+      --results-footer:10.4vh;
     }
-    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}
-    body{background:radial-gradient(circle at 50% -15%,#16314a 0,#0a131d 28%,#070b10 62%);min-height:100vh}
-    .shell{max-width:1780px;margin:0 auto;padding:12px}.top{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #203044;border-radius:12px;background:rgba(8,14,20,.96);backdrop-filter:blur(16px);box-shadow:0 14px 40px rgba(0,0,0,.35)}
-    .brand{font-size:19px;font-weight:1000;letter-spacing:-.03em;white-space:nowrap}.brand small{display:block;font-size:8px;color:var(--muted);letter-spacing:.15em;margin-top:2px}.spacer{flex:1}
-    .chip{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#0e1720;border-radius:999px;padding:6px 9px;font-size:10px;color:#c8d5e3;white-space:nowrap}.dot{width:8px;height:8px;border-radius:50%;background:#5c6876}.dot.on{background:var(--green);box-shadow:0 0 12px rgba(32,217,138,.55)}.dot.warn{background:var(--yellow)}
-    input,select,textarea{background:#09121a;border:1px solid #2c4055;color:#fff;border-radius:7px;padding:8px 9px;outline:none}input:focus,select:focus,textarea:focus{border-color:#5f8db7;box-shadow:0 0 0 3px rgba(95,141,183,.12)}.top input{width:88px;text-transform:uppercase}
-    .btn{border:0;border-radius:8px;padding:9px 12px;font-weight:900;cursor:pointer;background:#29384a;color:#fff;transition:.15s}.btn:hover{filter:brightness(1.12)}.btn:disabled{opacity:.35;cursor:not-allowed;filter:none}.btn.blue{background:#176fd1}.btn.green{background:var(--green);color:#06120d}.btn.yellow{background:var(--yellow);color:#111}.btn.red{background:var(--danger)}.btn.ghost{background:transparent;border:1px solid #354a61}.btn.orange{background:#b96818}.btn.sm{padding:6px 8px;font-size:10px}.btn.xs{padding:4px 7px;font-size:9px}.btn.active{box-shadow:inset 0 0 0 2px #fff}
-    .tabs{display:flex;gap:6px;margin:10px 0}.tab{border:1px solid #24364a;background:#0c151e;color:#8da1b7;border-radius:9px;padding:9px 14px;font-size:11px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}.tab.active{background:var(--yellow);border-color:var(--yellow);color:#111}.view{display:none}.view.active{display:block}
-    .grid{display:grid;grid-template-columns:330px minmax(560px,1fr) 360px;gap:10px}.panel{border:1px solid #223248;border-radius:12px;background:linear-gradient(180deg,#111a24,#0c131b);overflow:hidden;box-shadow:0 16px 42px rgba(0,0,0,.18)}.panel h2{margin:0;padding:11px 13px;border-bottom:1px solid #223248;color:#b7c7d9;font-size:10px;letter-spacing:.14em;text-transform:uppercase}.body{padding:12px}.subhead{font-size:10px;color:#9eb0c4;letter-spacing:.12em;text-transform:uppercase;font-weight:900;margin:14px 0 7px}.subhead:first-child{margin-top:0}
-    .field{display:grid;grid-template-columns:1fr 1fr;gap:8px}.field.three{grid-template-columns:repeat(3,1fr)}.field.four{grid-template-columns:repeat(4,1fr)}.field .wide{grid-column:1/-1}.field label,.label{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.07em;font-weight:800;margin-bottom:4px}.field input,.field select{width:100%}.row{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.row.end{justify-content:flex-end}.notice{margin-top:9px;padding:8px 9px;border-radius:8px;border:1px solid #2a4057;background:#0b151f;color:#aebed0;font-size:10px;line-height:1.45}.notice strong{color:#fff}.notice.yellow{border-color:rgba(255,230,0,.35);background:rgba(255,230,0,.06);color:#e6dca0}.notice.green{border-color:rgba(32,217,138,.35);background:rgba(32,217,138,.06);color:#a8dfc5}
-    .teamcols{display:grid;grid-template-columns:1fr 1fr;gap:8px}.teamcol{padding:9px;border-radius:9px}.teamcol.red{background:rgba(237,28,46,.10);border:1px solid rgba(237,28,46,.32)}.teamcol.blue{background:rgba(8,120,189,.11);border:1px solid rgba(8,120,189,.35)}.teamcol h3{font-size:10px;text-transform:uppercase;letter-spacing:.09em;margin:0 0 7px}.team-input{display:grid;grid-template-columns:1fr 1.2fr;gap:5px;margin-top:5px}.team-input input{width:100%;min-width:0}
-    .scorecard{display:grid;grid-template-columns:1fr 245px 1fr;min-height:238px}.allianceScore{padding:20px;display:flex;flex-direction:column;justify-content:center}.allianceScore.red{background:linear-gradient(90deg,#8b0d1a,#5f0a13)}.allianceScore.blue{background:linear-gradient(270deg,#075b92,#043c61)}.allianceScore .name{font-size:13px;font-weight:950;text-transform:uppercase}.bigscore{font-size:88px;line-height:.93;font-weight:1000;letter-spacing:-.06em}.scoremeta{display:flex;gap:11px;flex-wrap:wrap;font-size:10px;margin-top:10px;color:#e7edf5}.scoremeta b{color:#fff}.core{background:#f0f1f2;color:#111;display:flex;align-items:center;justify-content:center;flex-direction:column;border-inline:1px solid #fff;padding:10px;text-align:center}.core .match{font-size:10px;font-weight:950;text-transform:uppercase}.timer{font-size:58px;font-weight:1000;line-height:1;margin:7px 0}.gamephase{font-size:11px;font-weight:1000;text-transform:uppercase;max-width:220px}.hubmode{margin-top:8px;border:2px solid #111;padding:4px 7px;font-size:9px;font-weight:1000}.auto-decision{font-size:8px;margin-top:6px;font-weight:800;color:#4b5560}
-    .phasebar{display:flex;gap:5px;padding:9px;border-bottom:1px solid #223248;background:#091019;overflow:auto}.phasepill{min-width:78px;flex:1;border:1px solid #2b3e54;border-radius:6px;padding:6px 5px;text-align:center;color:#6f849b;font-size:8px;font-weight:950;letter-spacing:.05em}.phasepill.active{background:var(--yellow);border-color:var(--yellow);color:#111}.phasepill.done{border-color:#3a745c;color:#77c6a4}
-    .match-actions{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;padding:10px;border-top:1px solid #223248}.match-actions .btn{min-height:43px}.quick-actions{padding:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.quick-actions .btn{min-height:40px}
-    .controlgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:0 10px 10px}.mini{background:#091119;border:1px solid #213146;border-radius:9px;padding:10px}.mini h3{margin:0 0 8px;color:#aabbd0;font-size:9px;text-transform:uppercase;letter-spacing:.12em}.kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid #1d2b3b;font-size:10px}.kv:first-of-type{border-top:0}.kv span{color:var(--muted)}.adjust{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:5px;margin-top:6px;font-size:10px}.adjust strong{min-width:30px;text-align:center}
-    .statusgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.stat{background:#091119;border:1px solid #223248;border-radius:8px;padding:9px}.stat strong{display:block;font-size:18px}.stat span{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.log{height:290px;overflow:auto;background:#030609;padding:9px;font:10px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#a6c8b5}.log div{margin-bottom:2px}.log .sys{color:#89baff}.log .event{color:#f2f5f7}.log .ref{color:#ffe179}.log .err{color:#ff8796}
-    .regional-layout{display:grid;grid-template-columns:420px 1fr;gap:10px}.stack{display:grid;gap:10px}.roster-table,.data-table{width:100%;border-collapse:collapse;font-size:10px}.roster-table th,.roster-table td,.data-table th,.data-table td{padding:6px 6px;border-bottom:1px solid #1f2e40;text-align:left}.roster-table th,.data-table th{position:sticky;top:0;background:#0b141d;color:#8ea2b8;font-size:8px;text-transform:uppercase;letter-spacing:.07em;z-index:1}.roster-table input{width:100%;padding:6px}.scroll{overflow:auto;max-height:420px}.schedule-row.final{background:rgba(32,217,138,.05)}.schedule-row.loaded{outline:1px solid var(--yellow);outline-offset:-1px}.surrogate{color:var(--yellow);font-weight:900}.ranknum{font-size:16px;font-weight:1000}.rank-up{color:#47d69a}.rank-down{color:#ff7a89}.rank-flat{color:#8393a5}.metric{font-variant-numeric:tabular-nums}.empty{color:#718399;font-style:italic;text-align:center;padding:18px}
-    .alliance-builder{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.alliance-card{border:1px solid #2a3d53;background:#09131c;border-radius:9px;padding:9px}.alliance-card h4{margin:0 0 7px;font-size:11px}.alliance-card select{width:100%;margin-top:5px;padding:6px}.playoff-row{display:grid;grid-template-columns:130px 1fr 70px 1fr 88px;align-items:center;gap:6px;padding:7px 8px;border-bottom:1px solid #1f2e40;font-size:10px}.playoff-row .seed{font-weight:900}.playoff-row.done{background:rgba(32,217,138,.05)}.champion{padding:12px;background:var(--yellow);color:#111;font-size:20px;font-weight:1000;text-align:center;border-radius:9px;margin-top:9px;display:none}.champion.show{display:block}
-    .tuning-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.setting{display:grid;grid-template-columns:1fr 110px;gap:9px;align-items:center;padding:8px 0;border-bottom:1px solid #1f2f42}.setting:last-child{border-bottom:0}.setting b{font-size:10px}.setting small{display:block;color:var(--muted);font-size:8px;line-height:1.35;margin-top:2px}.setting input,.setting select{width:100%;padding:7px}.sliderline{display:grid;grid-template-columns:1fr 60px;gap:7px;align-items:center}.sliderline input[type=range]{padding:0;border:0;box-shadow:none}.sliderline output{text-align:right;font-size:10px;font-weight:900;color:#c8d7e6}
-    .badge{display:inline-flex;align-items:center;border:1px solid #33495f;border-radius:999px;padding:3px 7px;font-size:8px;color:#9fb3c7}.badge.yellow{border-color:#716a1f;color:#ffe977}.badge.green{border-color:#236f52;color:#80e0b4}.hidden{display:none!important}
-    @media(max-width:1280px){.grid{grid-template-columns:300px 1fr}.grid>.panel:last-child{grid-column:1/-1}.regional-layout{grid-template-columns:1fr}.scorecard{grid-template-columns:1fr 210px 1fr}.bigscore{font-size:70px}}
-    @media(max-width:820px){.shell{padding:7px}.top{flex-wrap:wrap}.tabs{overflow:auto}.grid{grid-template-columns:1fr}.scorecard{grid-template-columns:1fr 150px 1fr}.bigscore{font-size:50px}.timer{font-size:40px}.match-actions{grid-template-columns:1fr 1fr}.quick-actions{grid-template-columns:1fr 1fr}.controlgrid,.tuning-grid{grid-template-columns:1fr}.field.three,.field.four{grid-template-columns:1fr 1fr}.regional-layout{grid-template-columns:1fr}.alliance-builder{grid-template-columns:1fr}.playoff-row{grid-template-columns:1fr;gap:3px}.chip.hide-mobile{display:none}}
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080b0f;font-family:Arial,Helvetica,sans-serif;color:#111}
+    body{cursor:default}
+    body.cursor-hidden{cursor:none}
+    button,input,select{font:inherit}
+    .app{position:relative;width:100vw;height:100vh;background:#080b0f;overflow:hidden}
+    .camera{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#121821}
+    .camera.contain{object-fit:contain;background:#000}
+    .camera.empty{background:radial-gradient(circle at 50% 45%,#263440 0,#10171f 42%,#090d12 78%)}
+    .screen{position:absolute;inset:0;display:none;overflow:hidden}.screen.active{display:block}
+
+    /* =========================================================
+       PREVIEW — intentionally kept visually unchanged from v2.
+       ========================================================= */
+    .brandFallback{display:none;font-weight:1000;font-style:italic;letter-spacing:-.05em}
+    .top-strip{height:46px;display:grid;grid-template-columns:160px 1fr 144px;background:var(--ink);color:#fff;align-items:stretch;border-bottom:1px solid rgba(0,0,0,.28)}
+    .top-left{display:flex;align-items:center;padding:0 14px;font-weight:900;font-size:18px}
+    .top-center{display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900}
+    .top-right{background:#fff;padding:5px 16px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .top-right img{width:100%;height:100%;object-fit:contain}
+    .preview{background:linear-gradient(90deg,var(--red-dark) 0 50%,var(--blue-dark) 50% 100%)}
+    .preview-body{position:absolute;inset:46px 0 54px;display:grid;grid-template-columns:1fr 82px 1fr;align-items:center;padding:0 12px}
+    .preview-side{padding:0 0}.preview-side.red{padding-right:30px}.preview-side.blue{padding-left:30px}
+    .preview-list{display:flex;flex-direction:column;gap:10px}
+    .preview-team{height:63px;background:#fff;display:grid;grid-template-columns:1fr 32px;box-shadow:0 2px 4px rgba(0,0,0,.30)}
+    .preview-team-main{display:grid;grid-template-rows:32px 31px;min-width:0}
+    .preview-numberline{color:#fff;display:grid;grid-template-columns:38px 1fr auto;align-items:center;padding:0 10px 0 8px;font-weight:900;font-size:17px;gap:7px}
+    .red .preview-numberline{background:var(--red)}.blue .preview-numberline{background:var(--blue)}
+    .avatar{width:27px;height:27px;background:#ececec;border:1px solid rgba(0,0,0,.22);display:grid;place-items:center;font-size:10px;font-weight:900;color:#1b2834;overflow:hidden}
+    .avatar::before{content:'FRC';font-size:8px;letter-spacing:-.05em}
+    .preview-team-name{display:flex;align-items:center;padding:0 7px;font-size:18px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .rank-box{background:#111b23;color:#fff;display:grid;place-items:center;font-size:16px;font-weight:900}
+    .card-chip{background:var(--yellow);border:1px solid #111;padding:2px 12px;color:#111;font-size:11px;line-height:16px;font-weight:1000}
+    .vs{width:62px;height:52px;background:#fff;display:grid;place-items:center;font-size:33px;font-weight:1000;box-shadow:0 2px 4px rgba(0,0,0,.3);justify-self:center}
+    .preview-footer{position:absolute;bottom:0;left:0;right:0;height:54px;background:#fff;display:grid;grid-template-columns:140px 1fr;align-items:center;border-top:1px solid #aaa}
+    .footer-frc{height:54px;background:#101d26;padding:5px 12px;display:flex;align-items:center;justify-content:center}.footer-frc img{max-width:100%;max-height:100%}
+    .footer-event{font-weight:900;font-size:16px;padding-left:10px}
+
+    /* =========================================================
+       LIVE MATCH — rebuilt around the official 2026 proportions:
+       alliance status | score | timer | score | alliance status.
+       ========================================================= */
+    .match{background:transparent}
+    .live-scoreboard{position:absolute;left:0;right:0;top:0;height:var(--live-h);z-index:8;filter:drop-shadow(0 3px 4px rgba(0,0,0,.28))}
+    .live-top{height:28.8%;display:grid;grid-template-columns:15.5% 69% 15.5%;background:var(--ink);color:#fff}
+    .live-logo{background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .live-logo img{width:100%;height:100%;object-fit:fill}
+    .live-title{display:flex;align-items:center;justify-content:center;font-weight:900;font-size:clamp(14px,1.32vw,25px)}
+    .live-main{height:71.2%;display:grid;grid-template-columns:32.3% 11.85% 11.7% 11.85% 32.3%;align-items:stretch}
+    .live-alliance{position:relative;color:#fff;overflow:hidden}
+    .live-alliance.red{background:var(--red-dark)}.live-alliance.blue{background:var(--blue-dark)}
+    .live-team-row{height:44%;display:grid;grid-template-columns:repeat(3,1fr);align-items:center;padding:0 2.1%;gap:1.8%;font-weight:800;font-size:clamp(11px,1.05vw,19px)}
+    .live-team{height:68%;display:flex;align-items:center;justify-content:center;gap:.42em;background:rgba(0,0,0,.08);white-space:nowrap;position:relative}
+    .live-team.carded{outline:2px solid var(--yellow);outline-offset:-2px}
+    .live-avatar{width:1.05em;height:1.05em;background:#fff;color:#15212c;border-radius:1px;display:grid;place-items:center;font-size:.48em;font-weight:1000}
+    .live-bottom{height:56%;display:flex;align-items:center;gap:2.4%;padding:0 6.5%}
+    .live-alliance.blue .live-bottom{justify-content:flex-end}
+    .live-progress{height:64%;min-width:38%;display:flex;align-items:center;font-size:clamp(12px,1.33vw,24px);font-weight:900;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+    .live-progress.red{background:var(--red);margin-right:auto}.live-progress.blue{background:var(--blue);margin-left:auto}
+    .progress-value{padding:0 .7em;white-space:nowrap}
+    .progress-icon{height:100%;aspect-ratio:1;background:#fff;display:grid;place-items:center}
+    .fuel-dots{width:76%;height:70%;position:relative}
+    .fuel-dots i{position:absolute;width:25%;aspect-ratio:1;border-radius:50%;background:currentColor}
+    .fuel-dots i:nth-child(1){left:38%;top:0}.fuel-dots i:nth-child(2){left:19%;top:26%}.fuel-dots i:nth-child(3){left:57%;top:26%}.fuel-dots i:nth-child(4){left:0;top:53%}.fuel-dots i:nth-child(5){left:38%;top:53%}.fuel-dots i:nth-child(6){left:76%;top:53%}
+    .live-alliance.red .progress-icon{color:var(--red)}.live-alliance.blue .progress-icon{color:var(--blue)}
+    .hub-active{height:64%;aspect-ratio:1;background:var(--yellow);border:2px solid #111;display:grid;place-items:center;flex:0 0 auto}
+    .hub-active.off{visibility:hidden}
+    .arrow-shape{width:56%;height:18%;background:#111;position:relative}
+    .arrow-shape::after{content:'';position:absolute;right:-55%;top:50%;transform:translateY(-50%);border-top:.38em solid transparent;border-bottom:.38em solid transparent;border-left:.56em solid #111}
+    .arrow-shape.left{transform:rotate(180deg)}
+    .live-score{color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900}
+    .live-score.red{background:var(--red)}.live-score.blue{background:var(--blue)}
+    .live-score span{font-size:clamp(10px,.95vw,17px);line-height:1;margin-bottom:2%}.live-score b{font-size:clamp(37px,4.1vw,76px);line-height:.92}
+    .live-timer{position:relative;background:#f3f3f3;color:#111;display:grid;grid-template-rows:34% 66%;text-align:center;border-left:1px solid #aaa;border-right:1px solid #aaa}
+    .shift-data{display:grid;grid-template-columns:1fr 1fr;align-items:center;font-size:clamp(12px,1.25vw,23px);font-weight:900}
+    .shift-data span:first-child{border-right:1px solid #aaa;height:100%;display:grid;place-items:center}
+    .match-time{display:grid;place-items:center;font-size:clamp(33px,3.4vw,64px);font-weight:1000;line-height:1}
+    .review-panel{position:absolute;inset:0;background:var(--yellow);display:none;align-items:center;justify-content:center;gap:8%;font-size:clamp(12px,1.15vw,22px);font-weight:1000}
+    .live-timer.reviewing .shift-data,.live-timer.reviewing .match-time{visibility:hidden}.live-timer.reviewing .review-panel{display:flex}
+    .whistle-icon{width:28%;max-width:42px;height:auto}
+    .whistle-icon path,.whistle-icon circle{fill:#111}
+
+    /* Countdown deliberately does NOT restart its animation on MQTT heartbeats. */
+    .countdown{position:absolute;inset:var(--live-h) 0 0;z-index:12;display:none;place-items:center;background:radial-gradient(circle at center,rgba(0,0,0,.24),rgba(0,0,0,.66))}
+    .countdown.show{display:grid}
+    .count-stage{position:relative;width:min(27vw,300px);aspect-ratio:1;display:grid;place-items:center}
+    .count-ring{position:absolute;inset:0;border-radius:50%;border:7px solid rgba(255,255,255,.28);box-shadow:0 22px 70px rgba(0,0,0,.45),inset 0 0 0 3px rgba(255,255,255,.15)}
+    .count-ring::after{content:'';position:absolute;inset:13px;border-radius:50%;background:rgba(248,248,248,.95);box-shadow:inset 0 0 0 3px #111}
+    .count-number{position:relative;z-index:2;font-size:min(17vw,180px);font-weight:1000;line-height:1;color:#111;transform:scale(1);opacity:1}
+    .count-number.bump{animation:countBump .72s cubic-bezier(.2,.75,.22,1) both}
+    .count-caption{position:absolute;top:calc(50% + min(15vw,160px));color:#fff;font-size:clamp(13px,1.2vw,22px);font-weight:900;letter-spacing:.18em;text-transform:uppercase;text-shadow:0 2px 4px #000}
+    @keyframes countBump{0%{transform:scale(.76);opacity:0}28%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:1}}
+
+    /* =========================================================
+       MATCH RESULTS — qualification layout rebuilt against the
+       official 2026 reference image.
+       ========================================================= */
+    .results{background:#eee}
+    .results-top{position:absolute;left:0;right:0;top:0;height:var(--results-top);display:grid;grid-template-columns:15.5% 69% 15.5%;background:var(--ink);z-index:6;color:#fff}
+    .results-logo{background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}.results-logo img{width:100%;height:100%;object-fit:fill}
+    .results-title{display:grid;place-items:center;font-size:clamp(14px,1.45vw,27px);font-weight:900}
+    .results-main{position:absolute;left:0;right:0;top:var(--results-top);bottom:var(--results-footer);display:grid;grid-template-columns:31.2% 37.6% 31.2%}
+    .result-side{position:relative;overflow:hidden}.result-side.red{background:var(--red-dark)}.result-side.blue{background:var(--blue-dark)}
+    .result-center{position:relative;background:#ededed;overflow:hidden}
+    .result-score-head{height:27.3%;display:grid;grid-template-columns:1fr 1fr}
+    .result-score{color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900}
+    .result-score.red{background:var(--red)}.result-score.blue{background:var(--blue)}
+    .result-score span{font-size:clamp(11px,1.15vw,21px);margin-bottom:1.5%}.result-score b{font-size:clamp(48px,5.4vw,100px);line-height:.9}
+    .breakdown{height:43%;font-weight:900}
+    .break-section{height:15%;display:grid;place-items:center;background:#ccc;font-size:clamp(10px,1vw,18px)}
+    .break-row{height:21.25%;display:grid;grid-template-columns:1fr 24% 1fr;align-items:center;background:#f7f7f7;font-size:clamp(11px,1.35vw,25px)}
+    .break-row.white{background:#fff}.break-row .left{text-align:right;padding-right:7%}.break-row .right{text-align:left;padding-left:7%}.break-row .label{text-align:center;font-size:clamp(10px,1vw,18px)}
+    .penalty-row{height:18%;background:#d0d0d0}
+    .qr-block{position:absolute;left:50%;bottom:4.4%;transform:translateX(-50%);height:19.5%;aspect-ratio:2.15/1;background:#fff;border:1px solid #aaa;display:grid;grid-template-columns:auto 1fr;align-items:center}
+    .qr-svg{height:100%;aspect-ratio:1;padding:4%;background:#fff}.qr-label{font-size:clamp(8px,.8vw,15px);font-weight:900;line-height:1.05;padding-right:8%}
+    .winner-slot{position:absolute;left:0;right:0;top:0;height:27.3%;display:none;align-items:center;justify-content:center;gap:5%;background:var(--yellow);font-size:clamp(23px,3.1vw,58px);font-weight:1000;color:#111;z-index:2;transform:translateX(0)}
+    .winner-slot.show{display:flex}.winner-slot.tie{background:#d7d7d7}
+    .winner-slot.redWinner{transform:translateX(-105%)}.winner-slot.blueWinner{transform:translateX(105%)}
+    .winner-slot.redWinner.animate{animation:winnerFromLeft .86s cubic-bezier(.15,.82,.18,1) forwards}
+    .winner-slot.blueWinner.animate{animation:winnerFromRight .86s cubic-bezier(.15,.82,.18,1) forwards}
+    .winner-slot.tie.animate{animation:winnerDrop .7s cubic-bezier(.15,.82,.18,1) forwards}
+    @keyframes winnerFromLeft{to{transform:translateX(0)}}@keyframes winnerFromRight{to{transform:translateX(0)}}@keyframes winnerDrop{0%{transform:translateY(-105%)}to{transform:translateY(0)}}
+    .trophy-svg{width:16%;max-width:60px;height:auto}.trophy-svg path{fill:#111}
+    .high-score{position:absolute;left:1.8%;right:1.8%;top:29.2%;height:11.6%;background:var(--yellow);display:none;align-items:center;justify-content:space-between;padding:0 5%;font-size:clamp(10px,1.1vw,20px);font-weight:1000;color:#111;border:1px solid #111}
+    .high-score.show{display:flex}.star{font-size:clamp(16px,1.8vw,34px)}
+    .result-teams{position:absolute;left:1.7%;right:1.7%;top:42%;display:flex;flex-direction:column;gap:1.4%}
+    .result-team{height:8.8vh;max-height:57px;min-height:36px;display:grid;grid-template-columns:1fr 15%;box-shadow:0 2px 4px rgba(0,0,0,.3)}
+    .result-team-main{display:flex;align-items:center;gap:2.2%;padding:0 2%;color:#fff;font-size:clamp(12px,1.35vw,25px);font-weight:900;min-width:0}
+    .result-side.red .result-team-main{background:var(--red)}.result-side.blue .result-team-main{background:var(--blue)}
+    .result-avatar{height:70%;aspect-ratio:1;background:#eee;color:#17212a;border:1px solid rgba(0,0,0,.2);display:grid;place-items:center;font-size:.45em;font-weight:1000}
+    .result-card{margin-left:auto;background:var(--yellow);color:#111;border:1px solid #111;padding:.1em .55em;font-size:.58em}
+    .result-rank{background:#111b23;color:#fff;display:flex;align-items:center;justify-content:center;gap:.15em;font-size:clamp(11px,1.15vw,22px);font-weight:900}
+    .rank-points{position:absolute;left:0;right:0;bottom:7.2%;color:#fff;text-align:center}
+    .rank-title{font-weight:900;font-size:clamp(12px,1.2vw,22px);margin-bottom:1.5%}
+    .rp-row{display:flex;align-items:center;justify-content:center;gap:1.7%}
+    .rp-icon{width:9.1%;aspect-ratio:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);display:grid;place-items:center}
+    .rp-icon img{width:84%;height:84%;object-fit:contain;filter:grayscale(1);opacity:.28}.rp-icon.on img{filter:none;opacity:1}.rp-icon.trophy img{width:76%;height:76%}
+    .results-footer{position:absolute;left:0;right:0;bottom:0;height:var(--results-footer);background:#fff;display:grid;grid-template-columns:17.5% 1fr 30%;align-items:center;border-top:1px solid #aaa;z-index:7}
+    .results-footer-logo{height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}.results-footer-logo.dark{background:#111d26}.results-footer-logo img{width:100%;height:100%;object-fit:fill}
+    .results-powered{text-align:center;font-size:clamp(14px,1.8vw,33px);font-weight:900}
+    .rockwell{padding:0 11%}.rockwell img{object-fit:contain}
+
+    /* Suspenseful reveal: structure -> scores -> hold -> winner. */
+    .results.pre-reveal .result-score b,
+    .results.pre-reveal .breakdown,
+    .results.pre-reveal .result-teams,
+    .results.pre-reveal .rank-points,
+    .results.pre-reveal .qr-block{opacity:0}
+    .results.structure .result-teams,.results.structure .rank-points,.results.structure .qr-block{animation:softIn .65s ease forwards}
+    .results.structure .breakdown{animation:softIn .65s .18s ease forwards}
+    .results.score-reveal .result-score b{animation:scoreIn .55s ease forwards}
+    @keyframes softIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    @keyframes scoreIn{from{opacity:0;transform:scale(.72)}to{opacity:1;transform:scale(1)}}
+
+    .result-curtain{position:absolute;inset:0;z-index:30;display:none;pointer-events:none;background:#fff}
+    .result-curtain.show{display:block}
+    .curtain-red,.curtain-blue{position:absolute;top:0;bottom:0;width:50%;transition:transform 1.2s cubic-bezier(.77,0,.18,1)}
+    .curtain-red{left:0;background:var(--red-dark)}.curtain-blue{right:0;background:var(--blue-dark)}
+    .result-curtain.open .curtain-red{transform:translateX(-102%)}.result-curtain.open .curtain-blue{transform:translateX(102%)}
+    .curtain-logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(34vw,520px);height:auto;background:#fff;padding:2.2%;box-shadow:0 12px 40px rgba(0,0,0,.35);opacity:1;transition:opacity .55s .55s ease}
+    .result-curtain.open .curtain-logo{opacity:0}
+
+    /* =========================================================
+       SETUP
+       ========================================================= */
+    .setup{position:absolute;inset:0;z-index:50;background:rgba(5,8,12,.93);display:flex;align-items:center;justify-content:center;color:#fff}
+    .setup.hidden{display:none}.setup-card{width:min(720px,94vw);max-height:92vh;overflow:auto;background:#121a24;border:1px solid #314156;border-radius:14px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+    .setup-card h2{margin:0 0 6px;font-size:24px}.setup-card p{margin:0 0 16px;color:#9eb0c4;font-size:13px;line-height:1.45}
+    .setup-grid{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px}.setup-grid.three{grid-template-columns:1fr 1fr auto}
+    .setup-card input,.setup-card select{background:#0b1118;color:#fff;border:1px solid #34465f;border-radius:7px;padding:9px;min-width:0}
+    .setup-card button{border:0;border-radius:7px;padding:10px 12px;background:#1d70d1;color:#fff;font-weight:900;cursor:pointer}
+    .setup-card button.secondary{background:#303e50}.setup-card button.go{background:var(--yellow);color:#111}
+    .setup-status{margin-top:12px;color:#9cb0c6;font-size:11px}.setup-note{margin-top:10px;border:1px solid #2d3d51;background:#0b121a;padding:9px;border-radius:8px;color:#9db0c6;font-size:10px;line-height:1.45}
+    .audio-tests{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}.audio-tests button{font-size:10px;padding:8px 4px;background:#253447}
+    .broadcast-hint{position:absolute;right:8px;bottom:8px;z-index:45;color:rgba(255,255,255,.45);font-size:9px;text-shadow:0 1px 2px #000}.audio-pill{position:absolute;left:8px;bottom:8px;z-index:45;background:rgba(0,0,0,.55);color:#fff;font-size:9px;padding:5px 7px;border:1px solid rgba(255,255,255,.18);display:none}.audio-pill.show{display:block}
+
+    @media(max-width:980px){
+      :root{--live-h:15.2vh}
+      .preview-team-name{font-size:15px}
+      .audio-tests{grid-template-columns:repeat(3,1fr)}
+    }
   </style>
 </head>
 <body>
-<div class="shell">
-  <header class="top">
-    <div class="brand">REBUILT FMS <small>BACKSTAGE · SCOREKEEPER · EVENT CONTROL</small></div>
-    <div class="chip"><span id="mqttDot" class="dot"></span><span id="mqttStatus">MQTT OFFLINE</span></div>
-    <div class="chip"><span id="hubDot" class="dot warn"></span><span id="hubStatus">HUB WAITING</span></div>
-    <div class="chip hide-mobile"><span id="refDot" class="dot warn"></span><span id="refStatus">REF WAITING</span></div>
-    <div class="spacer"></div>
-    <span id="headerEvent" class="badge">Single Match</span>
-    <input id="roomInput" value="HUB1" aria-label="Room ID" />
-    <button class="btn blue" onclick="connectNetwork()">Connect</button>
-  </header>
+<div class="app" id="app">
+  <video id="camera" class="camera empty" autoplay playsinline muted></video>
 
-  <nav class="tabs">
-    <button id="tabMatch" class="tab active" onclick="showView('match')">Match Control</button>
-    <button id="tabRegional" class="tab" onclick="showView('regional')">Regional Manager</button>
-    <button id="tabTuning" class="tab" onclick="showView('tuning')">Game + Broadcast Tuning</button>
-  </nav>
-
-  <!-- MATCH CONTROL -->
-  <section id="viewMatch" class="view active">
-    <div class="grid">
-      <section class="panel">
-        <h2>Match Load</h2>
-        <div class="body">
-          <div class="field">
-            <div class="wide"><label>Event name</label><input id="eventName" value="REBUILT Human Player Invitational"></div>
-            <div><label>Mode</label><select id="eventMode" onchange="modeChanged()"><option value="single">Single Match</option><option value="regional">Regional Mode</option><option value="test">FMS Test</option></select></div>
-            <div><label>Match format</label><select id="matchFormat" onchange="renderManualTeamInputs()"><option value="2">4 players · 2v2</option><option value="3">6 players · 3v3</option></select></div>
-            <div><label>Match type</label><select id="matchType"><option>Qualification</option><option>Practice</option><option>Playoff</option></select></div>
-            <div><label>Match #</label><input id="matchNumber" type="number" min="1" value="1"></div>
-            <div class="wide"><label>Total qualification matches</label><input id="totalMatches" type="number" min="1" value="1"></div>
-          </div>
-          <div class="subhead">Field teams</div>
-          <div class="teamcols">
-            <div class="teamcol red"><h3>Red Alliance</h3><div id="manualRedTeams"></div></div>
-            <div class="teamcol blue"><h3>Blue Alliance</h3><div id="manualBlueTeams"></div></div>
-          </div>
-          <div class="row" style="margin-top:10px">
-            <button class="btn green" onclick="applyManualMatch()">Load Match</button>
-            <button class="btn ghost" onclick="stageMatch()">Stage on Field</button>
-            <button class="btn ghost" onclick="saveQuickPreset()">Save Preset</button>
-          </div>
-          <div id="loadedMatchNote" class="notice"><strong>Stage on Field</strong> sends the Audience Display to the live camera + match scoreboard before the match starts, just like an FRC field presentation.</div>
-        </div>
-
-        <h2>Match Display</h2>
-        <div class="body">
-          <div class="row">
-            <button class="btn ghost" onclick="setScreen('PREVIEW')">Preview</button>
-            <button class="btn ghost" onclick="stageMatch(false)">Field / Match</button>
-            <button class="btn ghost" onclick="setScreen('REVIEW')">Under Review</button>
-            <button class="btn ghost" onclick="setScreen('RESULTS')">Results</button>
-          </div>
-          <div class="notice yellow"><strong>FRC timing:</strong> 20s Free For All → 3s scoring delay → 10s Transition → four 25s Alliance Shifts → 30s Mayhem End Game. Shift 1 is active for the alliance that <em>lost</em> Free For All; ties are randomized, exactly mirroring the 2026 HUB status rule.</div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="phasebar">
-          <div id="p-auto" class="phasepill">AUTO / FFA</div><div id="p-delay" class="phasepill">3s DELAY</div><div id="p-transition" class="phasepill">TRANSITION</div><div id="p-shift1" class="phasepill">SHIFT 1</div><div id="p-shift2" class="phasepill">SHIFT 2</div><div id="p-shift3" class="phasepill">SHIFT 3</div><div id="p-shift4" class="phasepill">SHIFT 4</div><div id="p-endgame" class="phasepill">END GAME</div>
-        </div>
-        <div class="scorecard">
-          <div class="allianceScore red"><div class="name">Red Alliance</div><div id="redScore" class="bigscore">0</div><div class="scoremeta"><span>Raw Fuel <b id="redFuel">0</b></span><span>Fuel Pts <b id="redFuelPts">0</b></span><span>Penalty <b id="redPenalty">0</b></span></div></div>
-          <div class="core"><div id="matchLabel" class="match">Qualification 1 of 1</div><div id="timer" class="timer">0:20</div><div id="gamePhase" class="gamephase">PRE-MATCH READY</div><div id="hubMode" class="hubmode">HUB READY</div><div id="autoDecision" class="auto-decision">AUTO decision pending</div></div>
-          <div class="allianceScore blue"><div class="name">Blue Alliance</div><div id="blueScore" class="bigscore">0</div><div class="scoremeta"><span>Raw Fuel <b id="blueFuel">0</b></span><span>Fuel Pts <b id="blueFuelPts">0</b></span><span>Penalty <b id="bluePenalty">0</b></span></div></div>
-        </div>
-        <div class="match-actions">
-          <button class="btn ghost" onclick="stageMatch()">STAGE FIELD</button>
-          <button id="startBtn" class="btn yellow" onclick="startMatch()">START MATCH</button>
-          <button class="btn red" onclick="abortMatch()">ABORT</button>
-          <button class="btn ghost" onclick="resetMatch(true)">RESET</button>
-          <button class="btn green" onclick="finalizeCurrentResult()">FINALIZE RESULT</button>
-        </div>
-        <div class="quick-actions">
-          <button class="btn" onclick="manualFuel('RED',1)">RED +1 FUEL</button><button class="btn" onclick="manualFuel('RED',-1)">RED −1</button>
-          <button class="btn" onclick="manualFuel('BLUE',1)">BLUE +1 FUEL</button><button class="btn" onclick="manualFuel('BLUE',-1)">BLUE −1</button>
-        </div>
-        <div class="controlgrid">
-          <div class="mini"><h3>Match State</h3><div class="kv"><span>Audience screen</span><b id="screenState">PREVIEW</b></div><div class="kv"><span>Period</span><b id="periodState">PREMATCH</b></div><div class="kv"><span>Raw HUB events</span><b id="hubEvents">0</b></div><div class="kv"><span>Last chute</span><b id="lastChute">—</b></div><div class="kv"><span>Last assignment</span><b id="lastAssignment">—</b></div></div>
-          <div class="mini"><h3>Score Correction</h3><div class="adjust"><span>Red penalty award</span><strong id="rpMini">0</strong><button class="btn xs" onclick="adjustPenalty('RED',-5)">−5</button><button class="btn xs" onclick="adjustPenalty('RED',5)">+5</button></div><div class="adjust"><span>Blue penalty award</span><strong id="bpMini">0</strong><button class="btn xs" onclick="adjustPenalty('BLUE',-5)">−5</button><button class="btn xs" onclick="adjustPenalty('BLUE',5)">+5</button></div><div class="adjust"><span>Red manual bonus RP</span><strong id="redBonusMini">0</strong><button class="btn xs" onclick="setManualBonus('RED',0)">0</button><button class="btn xs" onclick="setManualBonus('RED',1)">1</button></div><div class="adjust"><span>Blue manual bonus RP</span><strong id="blueBonusMini">0</strong><button class="btn xs" onclick="setManualBonus('BLUE',0)">0</button><button class="btn xs" onclick="setManualBonus('BLUE',1)">1</button></div><div class="row" style="margin-top:8px"><button class="btn sm ghost" onclick="undoLastScore()">Undo last score action</button></div></div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h2>System Health</h2>
-        <div class="body">
-          <div class="statusgrid"><div class="stat"><strong id="hubAge">—</strong><span>HUB heartbeat age</span></div><div class="stat"><strong id="refCount">0</strong><span>Ref events</span></div><div class="stat"><strong id="stateSeq">0</strong><span>State packets</span></div><div class="stat"><strong id="matchId">Q1</strong><span>Match ID</span></div></div>
-          <div class="row" style="margin-top:9px"><button class="btn sm ghost" onclick="exportSnapshot()">Snapshot JSON</button><button class="btn sm ghost" onclick="exportCurrentResultCsv(false)">Result CSV</button></div>
-        </div>
-        <h2>Event Log</h2><div id="logBox" class="log"></div>
-        <div class="body"><div class="row"><button class="btn sm ghost" onclick="clearLog()">Clear log</button></div></div>
-      </section>
+  <!-- MATCH PREVIEW — unchanged -->
+  <section id="previewScreen" class="screen preview active">
+    <div class="top-strip">
+      <div class="top-left">Up Next</div>
+      <div id="previewMatchLabel" class="top-center">Qualification 24 of 72</div>
+      <div class="top-right"><img src="https://info.firstinspires.org/hubfs/Age/rebuilt.svg" alt="REBUILT" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="brandFallback">REBUILT</span></div>
+    </div>
+    <div class="preview-body">
+      <div class="preview-side red"><div id="redPreview" class="preview-list"></div></div>
+      <div class="vs">VS</div>
+      <div class="preview-side blue"><div id="bluePreview" class="preview-list"></div></div>
+    </div>
+    <div class="preview-footer">
+      <div class="footer-frc"><img src="https://info.firstinspires.org/hubfs/first_in_show/FRC-logo.svg" alt="FIRST Robotics Competition"></div>
+      <div id="previewEvent" class="footer-event">REBUILT Human Player Invitational</div>
     </div>
   </section>
 
-  <!-- REGIONAL MANAGER -->
-  <section id="viewRegional" class="view">
-    <div class="regional-layout">
-      <div class="stack">
-        <section class="panel">
-          <h2>Regional Setup</h2>
-          <div class="body">
-            <div class="field">
-              <div class="wide"><label>Event name</label><input id="regionalEventName" value="REBUILT Human Player Regional"></div>
-              <div><label>Teams per alliance</label><select id="regionalTeamsPerAlliance" onchange="regionalConfigChanged()"><option value="2">2 · 4 total / match</option><option value="3">3 · 6 total / match</option></select></div>
-              <div><label>Target appearances/team</label><select id="regionalTargetAppearances" onchange="updateQualSuggestion()"><option>6</option><option selected>8</option><option>10</option><option>12</option></select></div>
-              <div><label>Suggested qualification matches</label><input id="qualSuggestion" readonly></div>
-              <div><label>Qualification matches to generate</label><input id="regionalQualCount" type="number" min="1" value="12"></div>
+  <!-- LIVE MATCH -->
+  <section id="matchScreen" class="screen match">
+    <div class="live-scoreboard">
+      <div class="live-top">
+        <div class="live-logo"><img src="data:image/png;base64,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" alt="FIRST AGE presented by Qualcomm"></div>
+        <div id="liveMatchLabel" class="live-title">Qualification 24 of 72</div>
+        <div class="live-logo"><img src="data:image/png;base64,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" alt="REBUILT presented by Haas"></div>
+      </div>
+      <div class="live-main">
+        <div class="live-alliance red">
+          <div id="redTeamNumbers" class="live-team-row"></div>
+          <div class="live-bottom">
+            <div id="redProgress" class="live-progress red">
+              <span id="redProgressText" class="progress-value">0 / 100</span>
+              <span class="progress-icon"><span class="fuel-dots"><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
             </div>
-            <div id="qualMath" class="notice">Add teams to calculate a suggested schedule.</div>
-            <div class="row" style="margin-top:9px"><button class="btn green" onclick="generateQualSchedule()">Generate Qualifications</button><button class="btn ghost" onclick="loadNextUnplayedQual()">Load Next Unplayed</button></div>
+            <div id="redHubActive" class="hub-active off"><span class="arrow-shape left"></span></div>
           </div>
-        </section>
-
-        <section class="panel">
-          <h2>Team Roster</h2>
-          <div class="body">
-            <div class="row"><button class="btn sm blue" onclick="addRosterTeam()">+ Add Team</button><button class="btn sm ghost" onclick="exportTeamsCsv()">Export Teams CSV</button><label class="btn sm ghost" style="cursor:pointer">Import Teams CSV<input id="teamCsvInput" type="file" accept=".csv,text/csv" hidden onchange="importTeamsCsv(event)"></label></div>
+        </div>
+        <div class="live-score red"><span>Red</span><b id="redLiveScore">0</b></div>
+        <div id="liveTimerCell" class="live-timer">
+          <div class="shift-data"><span id="shiftIndex">1 / 6</span><span id="shiftRemain">:20</span></div>
+          <div id="liveTimer" class="match-time">2:00</div>
+          <div class="review-panel">
+            <svg class="whistle-icon" viewBox="0 0 64 44" aria-hidden="true">
+              <path d="M6 23h17c3-8 10-13 19-13 9 0 16 5 19 13v8H48a13 13 0 1 1-25 0H6z"/>
+              <circle cx="39" cy="28" r="5" fill="#ffe600"/>
+              <path d="M5 18h22v8H5z"/>
+            </svg>
+            <span>Match Under Review</span>
           </div>
-          <div class="scroll"><table class="roster-table"><thead><tr><th style="width:32%">Team / ID</th><th>Name</th><th style="width:42px"></th></tr></thead><tbody id="rosterBody"></tbody></table></div>
-        </section>
-
-        <section class="panel">
-          <h2>Event Backup</h2>
-          <div class="body"><div class="row"><button class="btn sm ghost" onclick="exportEventBackup()">Export Event JSON</button><label class="btn sm ghost" style="cursor:pointer">Restore Event JSON<input id="eventBackupInput" type="file" accept="application/json,.json" hidden onchange="importEventBackup(event)"></label><button class="btn sm red" onclick="clearRegionalEvent()">Clear Regional</button></div><div class="notice green"><strong>No database required.</strong> Roster, schedule, rankings, alliances and results are saved in this browser's localStorage. Export an Event JSON periodically as a portable backup.</div></div>
-        </section>
+        </div>
+        <div class="live-score blue"><span>Blue</span><b id="blueLiveScore">0</b></div>
+        <div class="live-alliance blue">
+          <div id="blueTeamNumbers" class="live-team-row"></div>
+          <div class="live-bottom">
+            <div id="blueHubActive" class="hub-active off"><span class="arrow-shape"></span></div>
+            <div id="blueProgress" class="live-progress blue">
+              <span class="progress-icon"><span class="fuel-dots"><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
+              <span id="blueProgressText" class="progress-value">0 / 100</span>
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
 
-      <div class="stack">
-        <section class="panel">
-          <h2>Qualification Schedule</h2>
-          <div class="body"><div class="row"><span id="scheduleSummary" class="badge">No schedule</span><button class="btn sm ghost" onclick="exportScheduleCsv()">Export Schedule CSV</button><button class="btn sm ghost" onclick="exportAllResultsCsv()">Export All Results CSV</button></div></div>
-          <div class="scroll" style="max-height:360px"><table class="data-table"><thead><tr><th>#</th><th>Red Alliance</th><th>Blue Alliance</th><th>Status</th><th></th></tr></thead><tbody id="scheduleBody"></tbody></table></div>
-        </section>
-
-        <section class="panel">
-          <h2>Live Qualification Rankings</h2>
-          <div class="scroll" style="max-height:350px"><table class="data-table"><thead><tr><th>Rank</th><th>Team</th><th>W-L-T</th><th>RS</th><th>Avg Score*</th><th>Avg AUTO</th><th>Avg Fuel</th></tr></thead><tbody id="rankingsBody"></tbody></table></div>
-          <div class="body"><div class="notice">*Human-player adaptation of the 2026 ranking tiebreakers: Ranking Score first, then average alliance match score excluding foul awards, average Free For All fuel, average total fuel, then deterministic event random order. Win = 3 RP, tie = 1 RP; Energized/Supercharged thresholds and the optional manual bonus RP come from Game Tuning.</div></div>
-        </section>
-
-        <section class="panel">
-          <h2>Alliance Selection + Playoffs</h2>
-          <div class="body">
-            <div class="field three"><div><label>Alliance count</label><select id="playoffAllianceCount" onchange="renderAllianceBuilder()"><option value="8" selected>8 Alliances · FRC Double Elim</option></select></div><div><label>Active teams/alliance</label><input id="playoffTeamCount" readonly value="2"></div><div><label>Bracket</label><input readonly value="2026 double elimination"></div></div>
-            <div class="row" style="margin-top:9px"><button class="btn sm blue" onclick="seedAllianceCaptains()">Seed Captains from Rankings</button><button class="btn sm green" onclick="buildPlayoffBracket()">Build Playoff Bracket</button></div>
-            <div id="allianceBuilder" class="alliance-builder" style="margin-top:10px"></div>
-          </div>
-          <div id="playoffList"></div>
-          <div id="championBanner" class="champion"></div>
-        </section>
+    <div id="countdown" class="countdown">
+      <div class="count-stage">
+        <div class="count-ring"></div>
+        <div id="countNumber" class="count-number">3</div>
       </div>
+      <div class="count-caption">Match Starting</div>
     </div>
   </section>
 
-  <!-- TUNING -->
-  <section id="viewTuning" class="view">
-    <div class="tuning-grid">
-      <section class="panel">
-        <h2>Game Balancing · Safe Controls</h2>
-        <div class="body">
-          <div class="setting"><div><b>Free For All / AUTO fuel multiplier</b><small>Only changes points. AUTO winner for Shift 1 still uses raw fuel count, as FIRST does.</small></div><select id="autoMultiplier"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option></select></div>
-          <div class="setting"><div><b>Transition fuel multiplier</b><small>Applies during 2:20–2:10. Assignment stays 50/50 because both alliance HUBs are conceptually active.</small></div><select id="transitionMultiplier"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option></select></div>
-          <div class="setting"><div><b>Alliance Shift fuel multiplier</b><small>Applies to Shift 1–4. Fuel is assigned directly to the currently active alliance.</small></div><select id="shiftMultiplier"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option></select></div>
-          <div class="setting"><div><b>Mayhem / End Game multiplier</b><small>Applies during the final 0:30.</small></div><select id="endgameMultiplier"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option></select></div>
-          <div class="setting"><div><b>Free-for-all RED assignment chance</b><small>Default 50%. Used in AUTO and Transition. Keep near 50 for fairness.</small></div><div class="sliderline"><input id="ffaRedChance" type="range" min="40" max="60" step="1" value="50" oninput="syncOutput(this,'ffaRedOut','%')"><output id="ffaRedOut">50%</output></div></div>
-          <div class="setting"><div><b>Mayhem comeback bias</b><small>Probability that a new ball is awarded to the currently losing alliance. Your original logic is 60%.</small></div><div class="sliderline"><input id="mayhemBias" type="range" min="50" max="80" step="1" value="60" oninput="syncOutput(this,'mayhemOut','%')"><output id="mayhemOut">60%</output></div></div>
-          <div class="setting"><div><b>Energized RP threshold</b><small>Raw accepted FUEL across the match.</small></div><input id="energizedThreshold" type="number" min="1" value="100"></div>
-          <div class="setting"><div><b>Supercharged RP threshold</b><small>Raw accepted FUEL across the match.</small></div><input id="superchargedThreshold" type="number" min="1" value="360"></div>
-          <div class="setting"><div><b>Minor / Major foul</b><small>Penalty points credited to the opponent.</small></div><div class="field"><input id="minorPts" type="number" min="0" value="5"><input id="majorPts" type="number" min="0" value="15"></div></div>
-          <div class="row" style="margin-top:10px"><button class="btn green" onclick="saveTuning()">Save Game Tuning</button><button class="btn ghost" onclick="resetGameTuning()">Reset Game Defaults</button></div>
-        </div>
-      </section>
+  <!-- MATCH RESULTS -->
+  <section id="resultsScreen" class="screen results">
+    <div class="results-top">
+      <div class="results-logo"><img src="data:image/png;base64,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" alt="FIRST AGE presented by Qualcomm"></div>
+      <div id="resultsMatchLabel" class="results-title">Qualification 24 of 72</div>
+      <div class="results-logo"><img src="data:image/png;base64,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" alt="REBUILT presented by Haas"></div>
+    </div>
 
-      <section class="panel">
-        <h2>Audience Broadcast Tuning</h2>
-        <div class="body">
-          <div class="notice"><strong>These controls never touch scoring or match timing.</strong> They only tune Audience Display animation/audio pacing and are broadcast live to that display.</div>
-          <div class="setting"><div><b>Countdown pop animation</b><small>Animation duration for each 3 → 2 → 1 beat.</small></div><div class="sliderline"><input id="countdownAnimMs" type="range" min="220" max="900" step="20" value="420" oninput="syncOutput(this,'countdownOut',' ms')"><output id="countdownOut">420 ms</output></div></div>
-          <div class="setting"><div><b>Results curtain hold</b><small>Initial REBUILT takeover before the result frame opens.</small></div><div class="sliderline"><input id="curtainHoldMs" type="range" min="0" max="1200" step="50" value="250" oninput="syncOutput(this,'curtainHoldOut',' ms')"><output id="curtainHoldOut">250 ms</output></div></div>
-          <div class="setting"><div><b>Results curtain opening</b><small>How quickly the red/blue curtain clears.</small></div><div class="sliderline"><input id="curtainOpenMs" type="range" min="250" max="1600" step="50" value="500" oninput="syncOutput(this,'curtainOpenOut',' ms')"><output id="curtainOpenOut">500 ms</output></div></div>
-          <div class="setting"><div><b>Score count-up duration</b><small>Time for scores to animate from zero to final.</small></div><div class="sliderline"><input id="scoreCountMs" type="range" min="250" max="2000" step="50" value="750" oninput="syncOutput(this,'scoreCountOut',' ms')"><output id="scoreCountOut">750 ms</output></div></div>
-          <div class="setting"><div><b>Winner suspense hold</b><small>Pause after final scores appear before WINNER is revealed.</small></div><div class="sliderline"><input id="winnerHoldMs" type="range" min="0" max="2000" step="50" value="550" oninput="syncOutput(this,'winnerHoldOut',' ms')"><output id="winnerHoldOut">550 ms</output></div></div>
-          <div class="setting"><div><b>Winner slide duration</b><small>Entrance speed of the yellow WINNER block.</small></div><div class="sliderline"><input id="winnerSlideMs" type="range" min="180" max="1000" step="20" value="360" oninput="syncOutput(this,'winnerSlideOut',' ms')"><output id="winnerSlideOut">360 ms</output></div></div>
-          <div class="setting"><div><b>High score follow-up</b><small>Delay after WINNER before EVENT HIGH SCORE appears.</small></div><div class="sliderline"><input id="highScoreDelayMs" type="range" min="0" max="1400" step="50" value="350" oninput="syncOutput(this,'highScoreDelayOut',' ms')"><output id="highScoreDelayOut">350 ms</output></div></div>
-          <div class="setting"><div><b>FMS audio volume</b><small>Audience computer audio gain for Cavalry Charge, Bells, Linear Popping, Steam Whistle and Buzzer.</small></div><div class="sliderline"><input id="audioVolume" type="range" min="0" max="100" step="5" value="100" oninput="syncOutput(this,'audioVolumeOut','%')"><output id="audioVolumeOut">100%</output></div></div>
-          <div class="row" style="margin-top:10px"><button class="btn green" onclick="saveTuning()">Save Broadcast Tuning</button><button class="btn ghost" onclick="resetBroadcastTuning()">Reset Broadcast Defaults</button></div>
+    <div class="results-main">
+      <div class="result-side red">
+        <div id="redWinnerSlot" class="winner-slot redWinner">
+          <span class="winner-word">WINNER</span>
+          <svg class="trophy-svg" viewBox="0 0 64 64" aria-hidden="true"><path d="M18 6h28v8h10v8c0 10-6 18-16 20-1 5-4 9-8 11v5h11v6H21v-6h11v-5c-4-2-7-6-8-11C14 40 8 32 8 22v-8h10V6zm0 14h-4v2c0 6 3 11 9 13a34 34 0 0 1-5-15zm28 0a34 34 0 0 1-5 15c6-2 9-7 9-13v-2h-4z"/></svg>
         </div>
-      </section>
+        <div id="redHighScore" class="high-score"><span class="star">★</span><span>EVENT HIGH SCORE</span><span class="star">★</span></div>
+        <div id="redResultTeams" class="result-teams"></div>
+        <div class="rank-points"><div class="rank-title">Ranking Points</div><div id="redRp" class="rp-row"></div></div>
+      </div>
+
+      <div class="result-center">
+        <div class="result-score-head">
+          <div class="result-score red"><span>Red</span><b id="redResultScore">0</b></div>
+          <div class="result-score blue"><span>Blue</span><b id="blueResultScore">0</b></div>
+        </div>
+        <div class="breakdown">
+          <div class="break-section">AUTO</div>
+          <div class="break-row white"><span id="redAutoFuelResult" class="left">0</span><span class="label">FUEL</span><span id="blueAutoFuelResult" class="right">0</span></div>
+          <div class="break-row white"><span class="left">0</span><span class="label">TOWER</span><span class="right">0</span></div>
+          <div class="break-section">TELEOP</div>
+          <div class="break-row white"><span id="redFuelResult" class="left">0</span><span class="label">FUEL</span><span id="blueFuelResult" class="right">0</span></div>
+          <div class="break-row white"><span class="left">0</span><span class="label">TOWER</span><span class="right">0</span></div>
+          <div class="break-row penalty-row"><span id="redPenaltyResult" class="left">0</span><span class="label">PENALTY</span><span id="bluePenaltyResult" class="right">0</span></div>
+        </div>
+        <div class="qr-block">
+          <svg id="qrSvg" class="qr-svg" viewBox="0 0 29 29" shape-rendering="crispEdges" aria-hidden="true"></svg>
+          <div class="qr-label">Scan for<br>detailed<br><span id="qrMatch">match</span><br>results</div>
+        </div>
+      </div>
+
+      <div class="result-side blue">
+        <div id="blueWinnerSlot" class="winner-slot blueWinner">
+          <span class="winner-word">WINNER</span>
+          <svg class="trophy-svg" viewBox="0 0 64 64" aria-hidden="true"><path d="M18 6h28v8h10v8c0 10-6 18-16 20-1 5-4 9-8 11v5h11v6H21v-6h11v-5c-4-2-7-6-8-11C14 40 8 32 8 22v-8h10V6zm0 14h-4v2c0 6 3 11 9 13a34 34 0 0 1-5-15zm28 0a34 34 0 0 1-5 15c6-2 9-7 9-13v-2h-4z"/></svg>
+        </div>
+        <div id="blueHighScore" class="high-score"><span class="star">★</span><span>EVENT HIGH SCORE</span><span class="star">★</span></div>
+        <div id="blueResultTeams" class="result-teams"></div>
+        <div class="rank-points"><div class="rank-title">Ranking Points</div><div id="blueRp" class="rp-row"></div></div>
+      </div>
+    </div>
+
+    <div class="results-footer">
+      <div class="results-footer-logo dark"><img src="data:image/png;base64,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" alt="FIRST Robotics Competition"></div>
+      <div class="results-powered">Match Results Powered By</div>
+      <div class="results-footer-logo rockwell"><img src="data:image/png;base64,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" alt="Rockwell Automation"></div>
+    </div>
+
+    <div id="resultCurtain" class="result-curtain">
+      <div class="curtain-red"></div><div class="curtain-blue"></div>
+      <img class="curtain-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHoAAAAfCAIAAACnAk5aAAAPY0lEQVR4nO1afVCV1bp/1nq/3Hxs2wKbW2owKsdMGdIYLAkj06CUQsnvtDxWM5e0KexqNfmRN6eu56pNdfCYpQ1qZUlHPGKaZsp4IA1BE2FARAiIDWxgC+wN79d67h8LX7deKDt2DnXnPrOHWXvttdb7rN/zez7WeiFLMlZs2vAWAAAAQaB4pXVV2HUdSCj8noUQ0l+P/n0D97uT/4f7Xyr/F+Dux+DwS0X8id+ubIMCEGSMMVPXDdMwkBJKqSiKsiwDAGOMD+7HbSMipT9DHdMwBVH41+jTl/wU3ADQ2dmZufm9ysrK5oZmTdNUVdV0TZRlxpjdbg8LC5s4ceKsWbMEQeDQ94sgIiFE13XTNAXhKqD0SkonlPC/jDFk2I+g/wzc+/+2f9XKVaqq86+UUkKIaZqEEEoppXT79u2ffvrpRx99FB4e/s/XtndBRAB4//33N2zYYBiG1T9gwAD/MbIsb9iwYcrkKf2goiVLMlboiAbr+TATmYmMMcYYIqamplIBAEAQBI4vIcRikCRJvLFt2zbTNLH/5PLly3FxcT+906ioqKampn5UEhEp8HIbkH8IIIGeGru4uPjixYtDhkYA6eF1TEzMwoULk5OTHQ6HRXMAsBq9iqqqvMGjPBdd7/EYROx1sDXFNEzeQOzhAf/JNEz+AYC8vLxTp04BgCzL3PP4GP+MsnjxYrvd/tMm+WeLCAAUkKAFxNWEExkZmZub+9b6/8r88591XZdleePGjYmJiQDw3nvvLV26FBEppU6nMzg4ePXq1V1dXb0+gxsDEQ3D4CE+MDAwMjJy2rRpgxyD1v9pfWNjoyRJDz/88KRJkxRFqa+vz8zMNAyDMZaamlpUVFRTUyMIAmNMkiTGWFRUVEJCwtatW1VVNQxjzpw5DodjzZo1AKDrelZWVm1tLQA4nc558+bdcsstAGCz2RYtWtSPCaZHlmSsYIyhaVz5MDQ5h5hpmtXV1VEj/wCUAMC8BU8gomYYiLh582YA4CR64YUXli9fzunfq1jP4lGI91BKN27ceOjQIf6T3W7Pz8/XNI0xtnbtWt55xx13ZGZm+mc/AJAkaeXKla+//jpfauDAgUVFRYhomiZjrKKiIiQkhD/iueee4w7BHbl/wx2Xn4F75cqVfJNUFPJOnDCQ6aZZWFg4fPhwjkJsbOzx48eHDx/+s3aVZTkkJISnLw7HzJkzZ0yfwdsLFizQNA0RfT7fuHHjuD2WLl06e/ZsRVF6dKDU4XBER0efP39+4sSJXIEZ02dYmQYRuRkAwGazffXVV9ftVtO0/gUdlmSsMFhPTPQngqZpbrc7OjoaCAAlKSkphm60t7fv2rVrxIgRfEthYWHffvttR0dHSkoK77n77rtPnDhx+vTp7777rrCwsLi4eM2aNYIgCIIwYcKE5ubm8vLymJgYWZYFQXj22WdDQkIAQFGUAwcO8EdnZ2fLskwpDQ4OzsvLa2ho2Lp1qyRJhJD4+Piqqiqfz/fNN98EBATwJ2ZnZ1tq19fXjx49mhsmMTGR9SY3CbeVQtDPb3odg4iGbvAGZxIiXl8IMsOkogAAoihmZ2eXlJRQQUDEMWPGrP/T+pycnDNnzvBsFhUVtWXLlvHjx7e3t7e0tHDOJiYmjhw50jRNXhfquv7aa68hIgAsXbLUNM2PP/64oqLCMIxp06Z1dXW1tLRIknT//fcnJSUxxgzD2L17t6ZpAPDggw/ed999zGQnT57keTUtLS0yMhIAcnJyfD4fISQuLi45OdlSPicn5/z585RSxtjixYt7dbJf5SxGCDENkwpU13VBEFRVtdlspmHqhk4IkSRJ13We0lVNVWSFJx5KaW/sZoiIHR0dd955JwAQgYJfiufxesb0GeXl5Zwpe/bssYJyeHj44MGDJ0+e3NHRYejGvn37eChQFGXChAkRERFc3QceeODQoUMjRoyQJElRlD179nDjFxYWDhw4kC+VnZ2NiGVlZeHh4ZTSiIiIuro6RKyurrbWyczMtEjk9Xrj4+P53FGjRjU2NvbK7r4oeYOiqirf9bp16/bv379ly5Y33ngjPT29rKzs4sWLzzzzTHl5+blz59LS0mbOnDl16tTly5dzavNZvR1zCADA3r17S0tLgRdqBABAFEVJkmJiYp5++un58+eLgsih//LLL03T5CMbGxsBICMjIzAwEBGzsrL4uUNV1fz8fKtKe/HFFz0eT2VlJQCMGTNm0qRJiGgYxo4dO3h5M27cuMmTJzPGsrKy2tvbEfHRRx8dPHgwY+zAgQMulwsAwsLCpk6dyvmFiHl5ed9//z0AyLKclJTkdDrx2hLzVxFRFCmlBQUFX3/99dixYz/55JNBjkGXqi8l3JdQeLrw9OnTp06d2rt3r9frnTVr1ujRox0OBz+dcKx64GZAAIAi6IYpSUJXV9e2bdsIIaIoAjBdNxFQ13WHw7Fu3bqExARKKAUKAFVVVQcPHuSLyLIsy/Lw4cMXLlxICMnPzz98+LBpmsHBwZGRkR6Pp7a2lldyO3bssJx6/PjxAQEBhJC6urrDhw9rmibL8syZM+12e2Vl5eeff24YRmBgYFpaGgB0d3cfOnSIR5s5c+Y4nU7TNPl+Pvvss87OTkqpLMuzZ8++7oZE07Tu7u6srKzIyEiv1xsQEDBo0KDW1lYQUBBEj6ctNDTU5WoMDg6WJFFV1fh77svPz5ckqaurKzEx0el0MsZ27dpVfbHabrfvy90XERGRmZl52223VddeGuiwZ3+R7fF4ZFm+dOlSeHj40aNHv/jii4ULFgqCANjDYACg1I8BjIAkCQBw/PjxY8eOcXaIkiiIBAAIIU1NTenp6RXl5RxrA40jR47U19cTQqKjow8ePFhQUJCbmxscHGwa5vbt29vb2wHg1Vdf5WZPSEjgNxsej6ekpIQjfs899yiKomnapk2bysrKAGDYsGFPPfUUABw+fLimpkbX9ZEjR8bFxem6fuHCBa5YQEDA3LlzFUXhpU5xcfG+ffs4g5KTk8ePH3/dxQghxOfz+Xy+tra2ioqKM2fO1NTUFBUVnTtXcuHChb+f+Lvb7Q4NDa2oKC8tLWtocNXV1Z09e7aqqgoAbDabruter9ftdgPAJ598qigKY6y5udnr9aZMSwkIDMzJyZkyZYrD4cjPz7/99tuDgoIWLVrUy+XM8y+usE7wBkNNMxAxOTmZU2bo0KHHjh99+pk/cvICgCAIz7/4vIGGgcblDs+ECRP4yCeffPKHH34oLS0tKiqqqqoqLS0NCwuTJGnIkCGVlZVtbW27du0KCwsDgICAgLVr1w4bNoy7GDfGvHnzuD6CIOzYsYNvJi4uThAEQsjbb7/d3d2NiC+//DKfNWvWLP8KYdWqVTx/yLLMg36vYuiGpmmNjY319fWtra2NjY2uZlddQ22Lp6Wzq7Ozq/PHxh9bL7fWNdR2dXV5PJ7m5mafz2eFe03TmI5/3bO3pKTk6NGj2dnZWVlZJponC09u2rQJEYuLi5cvX56RkbFz586epMJ6ciGXXu5Mjh3LCwoK4tR76aWXDENVta5JkyZxLAgho6PvrK3/ARGPnzhms9kAQJKkoKAgji+l9MMPP1y1ahVfwel0PvbYY6NGjbIM/MQTT5SWlg4ZMoR/VRSF13k8rC9btuzkyZMPPfRQbGyslZwXLFiQlZXlcrl4va8oyrvvvut2uy9fvswYa2tri4mJ4eqNHTvW7Xb3irVVAloNTdNMNDVTNdE00NCZrjPdQMNE0xpj6IZVz1VWVl4or2xzexoaGurq6goKCmpqalo8LU3uxqqqqqampo6ODsaY2+1ua2tzuVxtbW3XwS3y+G0QIAACACJ88MEHXq9XFEVCSFJSkiBIlLKUR6cePXqUoQkELlVVuZubh9w29K97vuCZTdd1Xdc7OzsBICIiYty4ca+88go/uDc3N+fk5HDUJElKT09fuXJlYGBgbGys2+1WVVVVVZ7rBEFYtmzZ2rVr582dd+TIEV5I8apu586dsiwHBwdfvHgRAEzTXLZs2ZtvvulwODZu3OjxeM6ePcvvcNLS0gYNGoSI/7vgsy5SrIYkSQyYQEUAIECsCIuAlFAeS6lAraVqa2ubGpq7unyqoY4cObLhx4aCgoKA4ACn0xk1LKqurk6SJJvN5nK5FEXhEdIZ4hw15irVRICeGykEYACFhYW5ubn8+jgpKSk+Ph4ACaEjRoyQZdFkpmmgz9vt8/p8vo4jXx8ZMGAAL+ZEUeTVRXp6eklJiSRJDoeDMWaz2QghoaGhSUlJqamp9957L2NM1/XVq1eLonj69GlN0wghsbGx8+fPf/zxx91ud9WlqrCwMFVVJUlqb2/XdV1RlMkPTs7NzbUCsaZp3NODgoLeeecd3u90OqdPn85h+rXedfivk5iYyMFiyCiliOj1eolIREFQpAHd3d2CIEiSFB0dfXWieY0aPXBTAN0EVdP/svkv3EMBYO7cuQMGDAAguqEOvm3w9BnT7XZ7aEho+L+FDxs2zDDMN/7zDYcjhMPN/xJCbr31VlEUExISVFXlJafD4bDb7VaAopQqinLXXXft3r3b5XJ1dnY6HA4e1gEgKCgoOzsbADo6OnRdV1W1paUFERMTEzu9neHh4W1tbU1NTa2trXV1dY888gghJC8vTxAE0zRTU1MBoKCgID4+vudYcdOCiMxkgihomsarQGA9UBJCgoKCdKZJVAIAvn0A4G85euAWgelIpR7QyZKMFW9veIsCqAb6fL61a1Yzw7j11vChQ4empKTwQwcX0zAJJZz4oijyCsy6DuXBl2/yupcmFt38fZyP5OWaqqqiIAqiwAOcBZOmaZIkWT18iq7rlFDd0DVNs9vtPJK4XK7q6uoZM2YYhlFWVvbYo4/dyCsbdu1XhGvqdKtms9QmhGiaIcuifz8DQEAChCBet0cA0HVTkq7uiyxZ9h+b/ns9BTCvVIfWv5T4u6P/iaGvfn+5EVf+teb+w2Hjp09BN7Kq/wrWeH+f4hZFhCtcvzKUWua9+pzf7hvuXyUy3/waN7iCpa1IESgAASDAuLXoVXYTy1T+jkb8noJ9UITcgCY3M/f3ItdlDxGQR0oGwAD4yzQA6Gn6xbde/Qb69shf6ou/dO5vWfrER0REAxAAAQgBwvymED/bIOmD3eQm2H0Tc3/Lcm0kuIbfYkfA4FYgFAS/Edc3AAD7iOjYBzQ3xu1/fO5vWfrCCgBI1L9vj/rDCL9Xw1fN4V/Q+F9m9tV/zbo3kMtuZu5vWfrCCgD+B/1A0Ce3vFfQAAAAAElFTkSuQmCC" alt="REBUILT">
     </div>
   </section>
+
+  <!-- LOCAL DEVICE SETUP -->
+  <div id="setup" class="setup">
+    <div class="setup-card">
+      <h2>Audience Display Setup</h2>
+      <p>This device only renders the broadcast. Match control, scoring, and referee decisions remain in FMS Backstage.</p>
+      <div class="setup-grid"><input id="roomInput" value="HUB1" maxlength="32"><button onclick="connectNetwork()">Connect FMS</button></div>
+      <div class="setup-grid"><select id="cameraSelect"><option>Camera not loaded</option></select><button onclick="startCamera()">Enable Camera</button></div>
+      <div class="setup-grid three"><input id="energizedInput" type="number" min="1" value="100" title="Energized threshold"><input id="superchargedInput" type="number" min="1" value="360" title="Supercharged threshold"><button class="secondary" onclick="saveDisplayPrefs()">Save thresholds</button></div>
+      <div class="setup-grid"><select id="cameraFit"><option value="cover">Camera: Crop / Fill</option><option value="contain">Camera: Fit Entire Frame</option></select><button class="secondary" onclick="toggleFullscreen()">Fullscreen</button></div>
+
+      <div class="setup-note">
+        <b>2026 cue mapping:</b> the manual confirms the cue names/timing, but FIRST does not publish the audio files on the public season page. This build uses a separate 2026 community cue pack for the five match sounds below; test each one here before going live. No file is labeled “official” unless FIRST publishes it directly.
+      </div>
+      <div class="audio-tests">
+        <button onclick="playCue('start')">Cavalry Charge</button>
+        <button onclick="playCue('bells')">3 Bells</button>
+        <button onclick="playCue('shift')">Linear Popping</button>
+        <button onclick="playCue('steam')">Steam Whistle</button>
+        <button onclick="playCue('buzzer')">Buzzer</button>
+      </div>
+
+      <div class="setup-grid"><button class="secondary" onclick="testAudioSequence()">Test Sequence</button><button class="go" onclick="enterBroadcast()">Enter Broadcast</button></div>
+      <div id="setupStatus" class="setup-status">Waiting for FMS state…</div>
+      <div class="setup-note">
+        This build now follows the exact 2026 FRC match clock: AUTO-style Free For All 0:20 → 3s scoring delay → TELEOP/Transition 2:20 → Alliance Shifts at 2:10 / 1:45 / 1:20 / 0:55 → Mayhem End Game at 0:30 → Buzzer at 0:00. Only the one-HUB scoring mechanic is custom. An aborted match uses a synthesized foghorn fallback.
+      </div>
+    </div>
+  </div>
+
+  <div class="broadcast-hint">C setup · F fullscreen · M audio</div>
+  <div id="audioPill" class="audio-pill">AUDIO MUTED</div>
 </div>
 
 <script>
+  let mqttClient=null,roomName='HUB1',stream=null,lastState=null,lastScreen=null,lastPhase=null,lastPeriod=null,lastCountdown=null,lastMatchTime=null;
+  let audioCtx=null,audioEnabled=true,resultAnimationToken=0,cursorTimer=null;
+  let playedTimedCues=new Set();
+
+  // Community 2026 cue pack. Cue names match the 2026 FRC manual, but these URLs are not claimed to be FIRST-hosted originals.
+  const cueUrls={
+    start:'https://raw.githubusercontent.com/JackLaFreniere/FRC2026Timer/master/audio/cavalry_charge.mp3',
+    bells:'https://raw.githubusercontent.com/JackLaFreniere/FRC2026Timer/master/audio/3_bells.mp3',
+    shift:'https://raw.githubusercontent.com/JackLaFreniere/FRC2026Timer/master/audio/linear_popping.mp3',
+    steam:'https://raw.githubusercontent.com/JackLaFreniere/FRC2026Timer/master/audio/steam_whistle.mp3',
+    buzzer:'https://raw.githubusercontent.com/JackLaFreniere/FRC2026Timer/master/audio/buzzer.mp3'
+  };
+  const cueAudio={};
   const $=id=>document.getElementById(id);
-  const clock=()=>new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  let mqttClient=null,roomName='HUB1',heartbeatInterval=null,timelineInterval=null,countdownInterval=null;
-  let lastHubHeartbeat=0,refEventCount=0,stateSeq=0,lastPeriod=null,countdownStartedAt=0,matchStartedAt=0;
-  const seenRefIds=new Set(),refActions=new Map();
-  let scoreHistory=[];
-  let currentMatchRef=null;
 
-  const DEFAULT_BALANCE={autoMultiplier:1,transitionMultiplier:1,shiftMultiplier:1,endgameMultiplier:1,ffaRedChance:50,mayhemBias:60,energizedThreshold:100,superchargedThreshold:360,minorPts:5,majorPts:15};
-  const DEFAULT_BROADCAST={countdownAnimMs:420,curtainHoldMs:250,curtainOpenMs:500,scoreCountMs:750,winnerHoldMs:550,winnerSlideMs:360,highScoreDelayMs:350,audioVolume:100};
-  const PERIODS=['AUTO','DELAY','TRANSITION','SHIFT1','SHIFT2','SHIFT3','SHIFT4','ENDGAME'];
-  const fuelTemplate=()=>({AUTO:{red:0,blue:0},TRANSITION:{red:0,blue:0},SHIFT1:{red:0,blue:0},SHIFT2:{red:0,blue:0},SHIFT3:{red:0,blue:0},SHIFT4:{red:0,blue:0},ENDGAME:{red:0,blue:0}});
-
-  const state={
-    eventName:'REBUILT Human Player Invitational',eventMode:'single',matchType:'Qualification',matchNumber:1,totalMatches:1,customMatchLabel:'',
-    teams:{red:['R1','R2'],blue:['B1','B2']},teamMeta:{},teamRanks:{},rankMoves:{},surrogates:{red:[],blue:[]},
-    screen:'PREVIEW',running:false,countdown:0,period:'PREMATCH',phase:'PRE-MATCH READY',displayTime:20,phaseTimeRemaining:20,activeAlliance:'BOTH',
-    autoResult:null,autoReference:null,shift1Active:null,
-    fuel:fuelTemplate(),redPenalty:0,bluePenalty:0,redCards:[],blueCards:[],manualBonusRp:{red:0,blue:0},
-    rawHubEvents:0,lastChute:null,lastAssignment:null,winner:null,underReview:false,
-    balance:{...DEFAULT_BALANCE},broadcast:{...DEFAULT_BROADCAST}
+  const OFFICIAL_ICONS={
+    trophy:'https://community.firstinspires.org/hs-fs/hubfs/blog/frc/2026-scoreboard-and-live-stream-graphics-8.png?height=109&name=2026-scoreboard-and-live-stream-graphics-8.png&width=109',
+    energized:'https://community.firstinspires.org/hs-fs/hubfs/blog/frc/2026-scoreboard-and-live-stream-graphics-9.png?height=100&name=2026-scoreboard-and-live-stream-graphics-9.png&width=100',
+    supercharged:'https://community.firstinspires.org/hs-fs/hubfs/blog/frc/2026-scoreboard-and-live-stream-graphics-10.png?height=99&name=2026-scoreboard-and-live-stream-graphics-10.png&width=100',
+    traversal:'https://community.firstinspires.org/hs-fs/hubfs/blog/frc/2026-scoreboard-and-live-stream-graphics-11.png?height=96&name=2026-scoreboard-and-live-stream-graphics-11.png&width=98'
   };
 
-  let regional=loadRegionalStore();
-
-  function emptyRegional(){return{eventName:'REBUILT Human Player Regional',teamsPerAlliance:2,targetAppearances:8,qualCount:12,scheduleSeed:2026,roster:[],schedule:[],playoffAlliances:Array.from({length:8},(_,i)=>({seed:i+1,teams:[]})),playoffResults:{},results:[],champion:null,rankMoves:{}}}
-  function loadRegionalStore(){try{const x=JSON.parse(localStorage.getItem('rebuiltRegionalEventV4')||'null');return x&&typeof x==='object'?{...emptyRegional(),...x}:emptyRegional()}catch(_){return emptyRegional()}}
-  function saveRegionalStore(){localStorage.setItem('rebuiltRegionalEventV4',JSON.stringify(regional))}
-  function saveQuickPreset(){const ids=['eventName','eventMode','matchFormat','matchType','matchNumber','totalMatches'];const p={};ids.forEach(id=>p[id]=$(id).value);p.manual=getManualTeams();localStorage.setItem('rebuiltFmsQuickPreset',JSON.stringify(p));log('Quick match preset saved locally.','sys')}
-  function loadQuickPreset(){try{const p=JSON.parse(localStorage.getItem('rebuiltFmsQuickPreset')||'null');if(!p)return;['eventName','eventMode','matchFormat','matchType','matchNumber','totalMatches'].forEach(id=>{if(p[id]!=null&&$(id))$(id).value=p[id]});renderManualTeamInputs(p.manual)}catch(_){}}
-  function loadTuning(){try{const p=JSON.parse(localStorage.getItem('rebuiltFmsTuningV4')||'null');if(p?.balance)Object.assign(state.balance,p.balance);if(p?.broadcast)Object.assign(state.broadcast,p.broadcast)}catch(_){} applyTuningToInputs()}
-  function saveTuning(){readTuningFromInputs();localStorage.setItem('rebuiltFmsTuningV4',JSON.stringify({balance:state.balance,broadcast:state.broadcast}));log('Game and broadcast tuning saved.','sys');render();broadcastState(true)}
-  function readTuningFromInputs(){
-    state.balance={autoMultiplier:num('autoMultiplier',1),transitionMultiplier:num('transitionMultiplier',1),shiftMultiplier:num('shiftMultiplier',1),endgameMultiplier:num('endgameMultiplier',1),ffaRedChance:num('ffaRedChance',50),mayhemBias:num('mayhemBias',60),energizedThreshold:Math.max(1,num('energizedThreshold',100)),superchargedThreshold:Math.max(2,num('superchargedThreshold',360)),minorPts:Math.max(0,num('minorPts',5)),majorPts:Math.max(0,num('majorPts',15))};
-    if(state.balance.superchargedThreshold<=state.balance.energizedThreshold)state.balance.superchargedThreshold=state.balance.energizedThreshold+1;
-    state.broadcast={countdownAnimMs:num('countdownAnimMs',420),curtainHoldMs:num('curtainHoldMs',250),curtainOpenMs:num('curtainOpenMs',500),scoreCountMs:num('scoreCountMs',750),winnerHoldMs:num('winnerHoldMs',550),winnerSlideMs:num('winnerSlideMs',360),highScoreDelayMs:num('highScoreDelayMs',350),audioVolume:num('audioVolume',100)};
-  }
-  function applyTuningToInputs(){const b=state.balance,c=state.broadcast;const map={autoMultiplier:b.autoMultiplier,transitionMultiplier:b.transitionMultiplier,shiftMultiplier:b.shiftMultiplier,endgameMultiplier:b.endgameMultiplier,ffaRedChance:b.ffaRedChance,mayhemBias:b.mayhemBias,energizedThreshold:b.energizedThreshold,superchargedThreshold:b.superchargedThreshold,minorPts:b.minorPts,majorPts:b.majorPts,countdownAnimMs:c.countdownAnimMs,curtainHoldMs:c.curtainHoldMs,curtainOpenMs:c.curtainOpenMs,scoreCountMs:c.scoreCountMs,winnerHoldMs:c.winnerHoldMs,winnerSlideMs:c.winnerSlideMs,highScoreDelayMs:c.highScoreDelayMs,audioVolume:c.audioVolume};Object.entries(map).forEach(([id,v])=>{if($(id))$(id).value=v});[['ffaRedChance','ffaRedOut','%'],['mayhemBias','mayhemOut','%'],['countdownAnimMs','countdownOut',' ms'],['curtainHoldMs','curtainHoldOut',' ms'],['curtainOpenMs','curtainOpenOut',' ms'],['scoreCountMs','scoreCountOut',' ms'],['winnerHoldMs','winnerHoldOut',' ms'],['winnerSlideMs','winnerSlideOut',' ms'],['highScoreDelayMs','highScoreDelayOut',' ms'],['audioVolume','audioVolumeOut','%']].forEach(([a,b,s])=>syncOutput($(a),b,s))}
-  function resetGameTuning(){Object.assign(state.balance,DEFAULT_BALANCE);applyTuningToInputs();saveTuning()}
-  function resetBroadcastTuning(){Object.assign(state.broadcast,DEFAULT_BROADCAST);applyTuningToInputs();saveTuning()}
-  function syncOutput(input,outId,suffix=''){if(input&&$(outId))$(outId).textContent=`${input.value}${suffix}`}
-  function num(id,fallback=0){const v=Number($(id)?.value);return Number.isFinite(v)?v:fallback}
-
-  function showView(name){['match','regional','tuning'].forEach(v=>{$(`view${cap(v)}`).classList.toggle('active',v===name);$(`tab${cap(v)}`).classList.toggle('active',v===name)});if(name==='regional'){$('headerEvent').textContent='Regional Manager';renderRegional()}else if(name==='tuning')$('headerEvent').textContent='Tuning';else $('headerEvent').textContent=state.eventMode==='regional'?'Regional Mode':state.eventMode==='test'?'FMS Test':'Single Match'}
-  function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
-  function modeChanged(){state.eventMode=$('eventMode').value;$('headerEvent').textContent=state.eventMode==='regional'?'Regional Mode':state.eventMode==='test'?'FMS Test':'Single Match';if(state.eventMode==='regional'){showView('regional')}}
-
-  function cleanRoom(v){return(v||'HUB1').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,32)||'HUB1'}
+  function cleanRoom(v){return (v||'HUB1').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,32)||'HUB1'}
   function connectNetwork(){
-    roomName=cleanRoom($('roomInput').value);$('roomInput').value=roomName;localStorage.setItem('rebuiltFmsRoom',roomName);
+    roomName=cleanRoom($('roomInput').value);$('roomInput').value=roomName;localStorage.setItem('rebuiltAudienceRoom',roomName);
     if(mqttClient){try{mqttClient.end(true)}catch(_){}}
     mqttClient=mqtt.connect('wss://broker.hivemq.com:8884/mqtt',{reconnectPeriod:1500,connectTimeout:5000});
-    mqttClient.on('connect',()=>{$('mqttStatus').textContent='MQTT ONLINE';$('mqttDot').className='dot on';log(`Connected to room ${roomName}.`,'sys');mqttClient.subscribe(`frchub/${roomName}/events`);mqttClient.subscribe(`frchub/${roomName}/ref/events`);mqttClient.subscribe(`frchub/${roomName}/hub/telemetry`);broadcastState(true);startHeartbeat();syncHub()});
-    mqttClient.on('message',(topic,msg)=>{try{routeMessage(topic,JSON.parse(msg.toString()))}catch(e){log(`Parse error: ${e.message}`,'err')}});
-    mqttClient.on('close',()=>{$('mqttStatus').textContent='MQTT OFFLINE';$('mqttDot').className='dot'});mqttClient.on('error',e=>log(`MQTT error: ${e.message||e}`,'err'));
-  }
-  function routeMessage(topic,data){
-    if(topic.endsWith('/hub/telemetry')&&data.type==='HUB_HEARTBEAT'){markHub();return}
-    if(topic.endsWith('/events')){if(data.type==='TRIGGER'){markHub();handleBallScored(data.chute)}if(data.type==='PONG')markHub();return}
-    if(topic.endsWith('/ref/events'))handleRefEvent(data);
-  }
-  function markHub(){lastHubHeartbeat=Date.now();$('hubStatus').textContent='HUB ONLINE';$('hubDot').className='dot on'}
-  function startHeartbeat(){clearInterval(heartbeatInterval);heartbeatInterval=setInterval(()=>{if(mqttClient?.connected){mqttClient.publish(`frchub/${roomName}/commands`,JSON.stringify({type:'PING',timestamp:Date.now()}));broadcastState(false)}const age=lastHubHeartbeat?Date.now()-lastHubHeartbeat:null;$('hubAge').textContent=age===null?'—':age<1000?'NOW':`${(age/1000).toFixed(1)}s`;if(age!==null&&age>3500){$('hubStatus').textContent='HUB WAITING';$('hubDot').className='dot warn'}},1000)}
-
-  function renderManualTeamInputs(seed){const k=Number($('matchFormat').value)||2;const existing=seed||getManualTeams();['red','blue'].forEach(side=>{const root=$(side==='red'?'manualRedTeams':'manualBlueTeams');root.innerHTML='';for(let i=0;i<k;i++){const x=existing?.[side]?.[i]||{};root.insertAdjacentHTML('beforeend',`<div class="team-input"><input class="manual-${side}-id" placeholder="Team / ID" value="${escAttr(x.id||'')}"><input class="manual-${side}-name" placeholder="Display name" value="${escAttr(x.name||'')}"></div>`)}})}
-  function getManualTeams(){const out={red:[],blue:[]};['red','blue'].forEach(side=>{document.querySelectorAll(`.manual-${side}-id`).forEach((el,i)=>out[side].push({id:el.value.trim(),name:document.querySelectorAll(`.manual-${side}-name`)[i]?.value.trim()||''}))});return out}
-  function escAttr(s){return String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-  function buildTeamMeta(red,blue,names={}){const meta={};[...red,...blue].forEach(id=>{if(!id)return;meta[id]={name:names[id]||`Team ${id}`}});return meta}
-  function applyManualMatch(){
-    readTuningFromInputs();const m=getManualTeams(),red=m.red.map(x=>x.id).filter(Boolean),blue=m.blue.map(x=>x.id).filter(Boolean),names={};m.red.concat(m.blue).forEach(x=>{if(x.id)names[x.id]=x.name||`Team ${x.id}`});
-    state.eventName=$('eventName').value.trim()||'REBUILT Event';state.eventMode=$('eventMode').value;state.matchType=$('matchType').value;state.matchNumber=Math.max(1,num('matchNumber',1));state.totalMatches=Math.max(1,num('totalMatches',1));state.customMatchLabel='';state.teams={red,blue};state.teamMeta=buildTeamMeta(red,blue,names);state.teamRanks={};state.rankMoves={};state.surrogates={red:[],blue:[]};currentMatchRef=null;
-    resetMatch(true);saveQuickPreset();$('headerEvent').textContent=state.eventMode==='regional'?'Regional Mode':state.eventMode==='test'?'FMS Test':'Single Match';log(`Loaded ${matchText()}.`,'sys');broadcastState(true)
-  }
-  function stageMatch(reset=true){readTuningFromInputs();if(reset)resetMatch(false);state.screen='MATCH';state.underReview=false;if(!state.running&&state.period!=='MATCH_STARTING'){state.period='PREMATCH';state.phase='PRE-MATCH READY';state.displayTime=20;state.phaseTimeRemaining=20;state.activeAlliance='BOTH'}render();syncHub();broadcastState(true);log('Audience staged on live field view.','sys')}
-
-  function resetScoring(){state.fuel=fuelTemplate();state.redPenalty=state.bluePenalty=0;state.redCards=[];state.blueCards=[];state.manualBonusRp={red:0,blue:0};state.rawHubEvents=0;state.lastChute=null;state.lastAssignment=null;state.winner=null;state.autoResult=null;state.autoReference=null;state.shift1Active=null;scoreHistory=[]}
-  function resetMatch(showPreview=true){clearInterval(timelineInterval);clearInterval(countdownInterval);timelineInterval=countdownInterval=null;state.running=false;state.countdown=0;matchStartedAt=0;countdownStartedAt=0;lastPeriod=null;resetScoring();state.period='PREMATCH';state.phase='PRE-MATCH READY';state.displayTime=20;state.phaseTimeRemaining=20;state.activeAlliance='BOTH';state.underReview=false;if(showPreview)state.screen='PREVIEW';render();syncHub();broadcastState(true)}
-  function startMatch(){
-    if(timelineInterval||countdownInterval)return;readTuningFromInputs();resetScoring();state.screen='MATCH';state.running=false;state.period='MATCH_STARTING';state.phase='MATCH STARTING';state.countdown=3;state.displayTime=20;state.phaseTimeRemaining=3;state.activeAlliance='NONE';countdownStartedAt=Date.now();lastPeriod='MATCH_STARTING';log('Match start sequence armed: 3… 2… 1…','sys');render();syncHub();broadcastState(true);
-    countdownInterval=setInterval(()=>{const left=3000-(Date.now()-countdownStartedAt),n=Math.max(0,Math.ceil(left/1000));if(n!==state.countdown){state.countdown=n;state.phaseTimeRemaining=n;render();broadcastState(false)}if(left<=0){clearInterval(countdownInterval);countdownInterval=null;beginMatch()}},80)
-  }
-  function beginMatch(){state.countdown=0;state.running=true;matchStartedAt=Date.now();lastPeriod=null;deriveTimelineState(0,true);log('MATCH START · Free For All / AUTO 0:20.','sys');timelineInterval=setInterval(tickMatch,80);tickMatch()}
-  function tickMatch(){const elapsed=(Date.now()-matchStartedAt)/1000;deriveTimelineState(elapsed,false);if(elapsed>=163){clearInterval(timelineInterval);timelineInterval=null;state.running=false;state.period='COMPLETE';state.phase='MATCH COMPLETE';state.displayTime=0;state.phaseTimeRemaining=0;state.activeAlliance='NONE';determineWinner();log('Match complete. Awaiting review/finalization.','sys');render();syncHub();broadcastState(true);return}render();syncHub();broadcastState(false)}
-  function deriveTimelineState(elapsed,force){
-    let period,phase,display,remaining,active='BOTH';
-    if(elapsed<20){period='AUTO';phase='FREE FOR ALL · AUTO';display=Math.max(0,Math.ceil(20-elapsed));remaining=display;active='BOTH'}
-    else if(elapsed<23){period='DELAY';phase='AUTO SCORING DELAY';display=0;remaining=Math.max(0,Math.ceil(23-elapsed));active='BOTH'}
-    else if(elapsed<33){period='TRANSITION';phase='TRANSITION SHIFT';display=Math.max(0,Math.ceil(140-(elapsed-23)));remaining=Math.max(0,Math.ceil(33-elapsed));active='BOTH'}
-    else if(elapsed<58){period='SHIFT1';phase='SHIFT 1';display=Math.max(0,Math.ceil(140-(elapsed-23)));remaining=Math.max(0,Math.ceil(58-elapsed));active=activeForShift(1)}
-    else if(elapsed<83){period='SHIFT2';phase='SHIFT 2';display=Math.max(0,Math.ceil(140-(elapsed-23)));remaining=Math.max(0,Math.ceil(83-elapsed));active=activeForShift(2)}
-    else if(elapsed<108){period='SHIFT3';phase='SHIFT 3';display=Math.max(0,Math.ceil(140-(elapsed-23)));remaining=Math.max(0,Math.ceil(108-elapsed));active=activeForShift(3)}
-    else if(elapsed<133){period='SHIFT4';phase='SHIFT 4';display=Math.max(0,Math.ceil(140-(elapsed-23)));remaining=Math.max(0,Math.ceil(133-elapsed));active=activeForShift(4)}
-    else{period='ENDGAME';phase='MAYHEM · END GAME';display=Math.max(0,Math.ceil(140-(elapsed-23)));remaining=Math.max(0,Math.ceil(163-elapsed));active='BOTH'}
-    if((period==='TRANSITION'||period.startsWith('SHIFT'))&&!state.shift1Active)finalizeAutoDecision();
-    if(period.startsWith('SHIFT'))active=activeForShift(Number(period.slice(-1)));
-    if(force||period!==lastPeriod){onPeriodChanged(lastPeriod,period);lastPeriod=period}
-    state.period=period;state.phase=phase;state.displayTime=display;state.phaseTimeRemaining=remaining;state.activeAlliance=active;
-  }
-  function onPeriodChanged(prev,next){if(!next)return;if(next==='DELAY')log(`AUTO ended · raw FUEL Red ${rawFuel('red','AUTO')} / Blue ${rawFuel('blue','AUTO')}. 3s scoring delay.`,'sys');if(next==='TRANSITION'){finalizeAutoDecision();log(`TELEOP / Transition begins. Shift 1 active: ${state.shift1Active}.`,'sys')}if(next.startsWith('SHIFT'))log(`${next} · active alliance ${activeForShift(Number(next.slice(-1)))}.`,'sys');if(next==='ENDGAME')log(`END GAME · MAYHEM ${state.balance.mayhemBias}% comeback bias.`,'sys')}
-  function finalizeAutoDecision(){if(state.shift1Active)return;const r=rawFuel('red','AUTO'),b=rawFuel('blue','AUTO');state.autoResult=r===b?'TIE':r>b?'RED':'BLUE';state.autoReference=state.autoResult==='TIE'?(Math.random()<.5?'RED':'BLUE'):state.autoResult;state.shift1Active=state.autoReference==='RED'?'BLUE':'RED'}
-  function activeForShift(n){if(!state.shift1Active)return'NONE';const odd=n%2===1;return odd?state.shift1Active:(state.shift1Active==='RED'?'BLUE':'RED')}
-  function abortMatch(){clearInterval(timelineInterval);clearInterval(countdownInterval);timelineInterval=countdownInterval=null;state.running=false;state.countdown=0;state.period='ABORTED';state.phase='MATCH ABORTED';state.activeAlliance='NONE';log('MATCH ABORTED by scorekeeper.','err');render();syncHub();broadcastState(true)}
-
-  function rawFuel(side,bucket=null){if(bucket)return Number(state.fuel[bucket]?.[side]||0);return Object.values(state.fuel).reduce((sum,x)=>sum+Number(x[side]||0),0)}
-  function fuelPoints(side){const b=state.balance,f=state.fuel;return f.AUTO[side]*b.autoMultiplier+f.TRANSITION[side]*b.transitionMultiplier+(f.SHIFT1[side]+f.SHIFT2[side]+f.SHIFT3[side]+f.SHIFT4[side])*b.shiftMultiplier+f.ENDGAME[side]*b.endgameMultiplier}
-  function score(side){return Math.max(0,fuelPoints(side)+(side==='red'?state.redPenalty:state.bluePenalty))}
-  function bucketForPeriod(){return state.period==='DELAY'?'AUTO':state.period}
-  function handleBallScored(chute){
-    state.rawHubEvents++;state.lastChute=String(chute);if(!state.running||!['AUTO','DELAY','TRANSITION','SHIFT1','SHIFT2','SHIFT3','SHIFT4','ENDGAME'].includes(state.period)){log(`HUB trigger C${Number(chute)+1} ignored: match not accepting score.`,'event');render();return}
-    let assigned='RED';const ffaRed=state.balance.ffaRedChance/100;
-    if(state.period==='AUTO'||state.period==='DELAY'||state.period==='TRANSITION')assigned=Math.random()<ffaRed?'RED':'BLUE';
-    else if(state.period.startsWith('SHIFT'))assigned=activeForShift(Number(state.period.slice(-1)));
-    else if(state.period==='ENDGAME'){
-      const rs=score('red'),bs=score('blue');if(rs===bs)assigned=Math.random()<.5?'RED':'BLUE';else{const losing=rs<bs?'RED':'BLUE',winning=rs>bs?'RED':'BLUE';assigned=Math.random()<(state.balance.mayhemBias/100)?losing:winning}
-    }
-    if(assigned!=='RED'&&assigned!=='BLUE')return;const side=assigned.toLowerCase(),bucket=bucketForPeriod();state.fuel[bucket][side]++;state.lastAssignment=assigned;scoreHistory.push({kind:'fuel',bucket,side,delta:1,time:Date.now()});log(`HUB C${Number(chute)+1} → ${assigned} +1 FUEL · ${state.phase}`,'event');render();syncHub();broadcastState(false)
-  }
-  function manualFuel(alliance,delta){const side=alliance.toLowerCase(),bucket=['AUTO','DELAY'].includes(state.period)?'AUTO':state.period==='PREMATCH'||state.period==='COMPLETE'||state.period==='ABORTED'||state.period==='MATCH_STARTING'?'TRANSITION':bucketForPeriod();const before=state.fuel[bucket]?.[side]||0,actual=Math.max(-before,delta);if(!state.fuel[bucket])state.fuel[bucket]={red:0,blue:0};state.fuel[bucket][side]+=actual;scoreHistory.push({kind:'fuel',bucket,side,delta:actual,time:Date.now(),manual:true});log(`Manual correction: ${alliance} ${actual>=0?'+':''}${actual} FUEL in ${bucket}.`,'sys');render();syncHub();broadcastState(true)}
-  function adjustPenalty(alliance,delta){const key=alliance==='RED'?'redPenalty':'bluePenalty',actual=Math.max(-state[key],delta);state[key]+=actual;scoreHistory.push({kind:'penalty',key,delta:actual,time:Date.now()});render();syncHub();broadcastState(true)}
-  function setManualBonus(alliance,v){state.manualBonusRp[alliance.toLowerCase()]=Number(v)||0;render();broadcastState(true)}
-  function undoLastScore(){const a=scoreHistory.pop();if(!a){log('Nothing to undo.','sys');return}if(a.kind==='fuel')state.fuel[a.bucket][a.side]=Math.max(0,state.fuel[a.bucket][a.side]-a.delta);else if(a.kind==='penalty')state[a.key]=Math.max(0,state[a.key]-a.delta);log('Last score action undone.','sys');render();syncHub();broadcastState(true)}
-
-  function handleRefEvent(data){
-    if(!data||!data.type)return;if(data.id&&seenRefIds.has(data.id))return;if(data.id)seenRefIds.add(data.id);refEventCount++;$('refCount').textContent=refEventCount;$('refStatus').textContent='REF ONLINE';$('refDot').className='dot on';
-    if(data.type==='FOUL'){const against=data.against==='BLUE'?'BLUE':'RED',award=against==='RED'?'BLUE':'RED',pts=data.severity==='MAJOR'?state.balance.majorPts:state.balance.minorPts,key=award==='RED'?'redPenalty':'bluePenalty';state[key]+=pts;const hist={kind:'penalty',key,delta:pts,time:Date.now(),refId:data.id};scoreHistory.push(hist);if(data.id)refActions.set(data.id,{type:'FOUL',key,pts,hist});log(`REF ${data.ref||''}: ${data.severity} against ${against} → ${award} +${pts}.`,'ref')}
-    else if(data.type==='CARD'){const key=data.against==='BLUE'?'blueCards':'redCards',card={color:data.color||'YELLOW',ref:data.ref||'',id:data.id};state[key].push(card);if(data.id)refActions.set(data.id,{type:'CARD',key,card});log(`REF ${data.ref||''}: ${data.color||'YELLOW'} CARD to ${data.against}.`,'ref')}
-    else if(data.type==='REF_UNDO'){const a=refActions.get(data.targetId);if(a?.type==='FOUL'){state[a.key]=Math.max(0,state[a.key]-a.pts);const i=scoreHistory.indexOf(a.hist);if(i>=0)scoreHistory.splice(i,1);refActions.delete(data.targetId)}else if(a?.type==='CARD'){const arr=state[a.key],i=arr.indexOf(a.card);if(i>=0)arr.splice(i,1);refActions.delete(data.targetId)}}
-    else if(data.type==='UNDER_REVIEW')setScreen('REVIEW');render();syncHub();broadcastState(true)
+    mqttClient.on('connect',()=>{$('setupStatus').textContent=`Connected to ${roomName}. Waiting for FMS…`;mqttClient.subscribe(`frchub/${roomName}/fms/state`)});
+    mqttClient.on('message',(topic,msg)=>{try{const s=JSON.parse(msg.toString());lastState=s;render(s);$('setupStatus').textContent=`FMS online · ${s.matchLabel||''}`}catch(e){$('setupStatus').textContent=`State error: ${e.message}`}});
+    mqttClient.on('close',()=>{$('setupStatus').textContent='MQTT disconnected. Reconnecting…'});
+    mqttClient.on('error',e=>$('setupStatus').textContent=`MQTT: ${e.message||e}`);
   }
 
-  function determineWinner(){const r=score('red'),b=score('blue');state.winner=r===b?'TIE':r>b?'RED':'BLUE';return state.winner}
-  function calcAllianceRp(side){const w=determineWinner(),A=side.toUpperCase(),raw=rawFuel(side),b=state.balance;let rp=w===A?3:w==='TIE'?1:0;const energized=raw>=b.energizedThreshold,supercharged=raw>=b.superchargedThreshold,manual=Number(state.manualBonusRp[side]||0);rp+=(energized?1:0)+(supercharged?1:0)+manual;return{total:rp,win:w===A?3:w==='TIE'?1:0,energized,supercharged,manual}}
-  function resultSnapshot(){determineWinner();return{timestamp:new Date().toISOString(),eventName:state.eventName,matchLabel:matchText(),matchShort:matchShort(),matchType:state.matchType,matchNumber:state.matchNumber,teams:JSON.parse(JSON.stringify(state.teams)),surrogates:JSON.parse(JSON.stringify(state.surrogates)),redScore:score('red'),blueScore:score('blue'),winner:state.winner,redFuelRaw:rawFuel('red'),blueFuelRaw:rawFuel('blue'),redFuelPoints:fuelPoints('red'),blueFuelPoints:fuelPoints('blue'),redAutoFuelRaw:rawFuel('red','AUTO'),blueAutoFuelRaw:rawFuel('blue','AUTO'),redAutoFuelPoints:rawFuel('red','AUTO')*state.balance.autoMultiplier,blueAutoFuelPoints:rawFuel('blue','AUTO')*state.balance.autoMultiplier,redTeleopFuelPoints:fuelPoints('red')-rawFuel('red','AUTO')*state.balance.autoMultiplier,blueTeleopFuelPoints:fuelPoints('blue')-rawFuel('blue','AUTO')*state.balance.autoMultiplier,redPenalty:state.redPenalty,bluePenalty:state.bluePenalty,redRp:calcAllianceRp('red'),blueRp:calcAllianceRp('blue'),autoResult:state.autoResult,shift1Active:state.shift1Active,balance:{...state.balance}}}
-  function finalizeCurrentResult(){if(state.running||state.period==='MATCH_STARTING'){alert('Stop or finish the match before finalizing.');return}const result=resultSnapshot();
-    if(state.eventMode==='regional'&&currentMatchRef?.kind==='qual')finalizeQualResult(currentMatchRef.id,result);
-    else if(state.eventMode==='regional'&&currentMatchRef?.kind==='playoff'){if(result.winner==='TIE'){alert('Playoff match is tied. Correct/resolve the score before advancing the bracket.');return}finalizePlayoffResult(currentMatchRef.key,result)}
-    else{regional.results.push({...result,source:'single'});saveRegionalStore()}
-    exportResultObjectCsv(result,true);state.screen='RESULTS';state.underReview=false;render();broadcastState(true);log(`Result finalized: ${result.redScore}–${result.blueScore} (${result.winner}).`,'sys')
-  }
-  function setScreen(screen){state.screen=screen;state.underReview=screen==='REVIEW';if(screen==='RESULTS')determineWinner();render();broadcastState(true)}
-
-  function formatClock(t){const n=Math.max(0,Math.floor(Number(t)||0));return`${Math.floor(n/60)}:${String(n%60).padStart(2,'0')}`}
-  function matchText(){return state.customMatchLabel||`${state.matchType} ${state.matchNumber}${state.matchType==='Qualification'?` of ${state.totalMatches}`:''}`}
-  function matchShort(){if(currentMatchRef?.kind==='playoff')return currentMatchRef.key;if(state.matchType==='Qualification')return`Q${state.matchNumber}`;if(state.matchType==='Practice')return`P${state.matchNumber}`;return`M${state.matchNumber}`}
-  function syncHub(){if(!mqttClient?.connected)return;mqttClient.publish(`frchub/${roomName}/commands`,JSON.stringify({type:'SYNC_TIME',timeStr:formatClock(state.displayTime),phase:state.phase}));mqttClient.publish(`frchub/${roomName}/commands`,JSON.stringify({type:'UPDATE_SCORES',red:score('red'),blue:score('blue')}))}
-  function publicState(){const rr=calcAllianceRp('red'),br=calcAllianceRp('blue');return{...state,fuel:JSON.parse(JSON.stringify(state.fuel)),balance:{...state.balance},broadcast:{...state.broadcast},redScore:score('red'),blueScore:score('blue'),redFuel:rawFuel('red'),blueFuel:rawFuel('blue'),redFuelPoints:fuelPoints('red'),blueFuelPoints:fuelPoints('blue'),redAutoFuel:rawFuel('red','AUTO'),blueAutoFuel:rawFuel('blue','AUTO'),redAutoFuelPoints:rawFuel('red','AUTO')*state.balance.autoMultiplier,blueAutoFuelPoints:rawFuel('blue','AUTO')*state.balance.autoMultiplier,redTeleopFuelPoints:fuelPoints('red')-rawFuel('red','AUTO')*state.balance.autoMultiplier,blueTeleopFuelPoints:fuelPoints('blue')-rawFuel('blue','AUTO')*state.balance.autoMultiplier,redRp:rr,blueRp:br,matchLabel:matchText(),matchShort:matchShort(),timestamp:Date.now(),seq:++stateSeq}}
-  function broadcastState(retain){$('stateSeq').textContent=stateSeq+1;if(!mqttClient?.connected)return;mqttClient.publish(`frchub/${roomName}/fms/state`,JSON.stringify(publicState()),{retain:!!retain,qos:0})}
-
-  function render(){
-    $('redScore').textContent=score('red');$('blueScore').textContent=score('blue');$('redFuel').textContent=rawFuel('red');$('blueFuel').textContent=rawFuel('blue');$('redFuelPts').textContent=fuelPoints('red');$('blueFuelPts').textContent=fuelPoints('blue');$('redPenalty').textContent=state.redPenalty;$('bluePenalty').textContent=state.bluePenalty;$('rpMini').textContent=state.redPenalty;$('bpMini').textContent=state.bluePenalty;$('redBonusMini').textContent=state.manualBonusRp.red;$('blueBonusMini').textContent=state.manualBonusRp.blue;
-    $('timer').textContent=formatClock(state.displayTime);$('gamePhase').textContent=state.period==='MATCH_STARTING'?`MATCH STARTING · ${state.countdown}`:state.phase;$('matchLabel').textContent=matchText();$('matchId').textContent=matchShort();$('screenState').textContent=state.screen;$('periodState').textContent=state.period;$('hubEvents').textContent=state.rawHubEvents;$('lastChute').textContent=state.lastChute==null?'—':`C${Number(state.lastChute)+1}`;$('lastAssignment').textContent=state.lastAssignment||'—';
-    $('hubMode').textContent=state.period==='PREMATCH'?'HUB READY':state.period==='MATCH_STARTING'?'HUB LOCKED':state.activeAlliance==='BOTH'?(state.period==='ENDGAME'?`MAYHEM ${state.balance.mayhemBias}%`:'HUB BOTH / 50-50'):state.activeAlliance==='RED'?'HUB → RED':state.activeAlliance==='BLUE'?'HUB → BLUE':'HUB READY';
-    $('autoDecision').textContent=state.shift1Active?`AUTO ${state.autoResult}${state.autoResult==='TIE'?` · FMS selected ${state.autoReference}`:''} · Shift 1 active ${state.shift1Active}`:'AUTO decision pending';
-    PERIODS.forEach(p=>{const el=$(`p-${p.toLowerCase()}`);if(!el)return;el.classList.toggle('active',state.period===p);const idx=PERIODS.indexOf(state.period),pi=PERIODS.indexOf(p);el.classList.toggle('done',idx>pi||state.period==='COMPLETE')});
-    $('startBtn').disabled=!!(timelineInterval||countdownInterval);
-  }
-
-  /* ---------------- REGIONAL MANAGER ---------------- */
-  function regionalConfigChanged(){regional.teamsPerAlliance=Number($('regionalTeamsPerAlliance').value)||2;$('matchFormat').value=String(regional.teamsPerAlliance);$('playoffTeamCount').value=regional.teamsPerAlliance;regional.playoffAlliances.forEach(a=>{a.teams=(a.teams||[]).slice(0,regional.teamsPerAlliance)});saveRegionalStore();renderManualTeamInputs();renderAllianceBuilder();updateQualSuggestion()}
-  function updateQualSuggestion(){regional.targetAppearances=Number($('regionalTargetAppearances').value)||8;const n=regional.roster.filter(t=>t.id).length,k=Number($('regionalTeamsPerAlliance').value)||2,slots=2*k,suggested=n>=slots?Math.ceil(n*regional.targetAppearances/slots):0;$('qualSuggestion').value=suggested||'—';if(!regional.schedule.length&&suggested)$('regionalQualCount').value=suggested;const chosen=Math.max(0,num('regionalQualCount',suggested));$('qualMath').innerHTML=n<slots?`Need at least <strong>${slots}</strong> teams for a ${k}v${k} match.`:`Suggested <strong>${suggested}</strong> qualification matches ≈ ${((suggested*slots)/n).toFixed(1)} appearances/team. Your current ${chosen||suggested} matches would average ${(((chosen||suggested)*slots)/n).toFixed(1)} appearances/team.`;saveRegionalStore()}
-  function addRosterTeam(id='',name=''){regional.roster.push({id:String(id),name:String(name)});saveRegionalStore();renderRoster();updateQualSuggestion()}
-  function removeRosterTeam(i){regional.roster.splice(i,1);saveRegionalStore();renderRoster();updateQualSuggestion()}
-  function rosterChanged(i,key,value){regional.roster[i][key]=value.trim();saveRegionalStore();updateQualSuggestion();renderAllianceBuilder()}
-  function renderRoster(){const body=$('rosterBody');body.innerHTML=regional.roster.length?regional.roster.map((t,i)=>`<tr><td><input value="${escAttr(t.id)}" placeholder="2976" oninput="rosterChanged(${i},'id',this.value)"></td><td><input value="${escAttr(t.name)}" placeholder="Team name" oninput="rosterChanged(${i},'name',this.value)"></td><td><button class="btn xs red" onclick="removeRosterTeam(${i})">×</button></td></tr>`).join(''):`<tr><td colspan="3" class="empty">Add the teams participating in this event.</td></tr>`}
-  function rosterMap(){const m={};regional.roster.forEach(t=>{if(t.id)m[t.id]=t.name||`Team ${t.id}`});return m}
-  function uniqueRosterIds(){return[...new Set(regional.roster.map(t=>t.id.trim()).filter(Boolean))]}
-  function hashString(s){let h=2166136261;for(const ch of String(s)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
-  function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
-  function shuffle(arr,rng=Math.random){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-  function pairKey(a,b){return[a,b].sort().join('|')}
-  function generateQualSchedule(){
-    regional.eventName=$('regionalEventName').value.trim()||'REBUILT Regional';regional.teamsPerAlliance=Number($('regionalTeamsPerAlliance').value)||2;regional.targetAppearances=Number($('regionalTargetAppearances').value)||8;regional.qualCount=Math.max(1,num('regionalQualCount',1));const teams=uniqueRosterIds(),k=regional.teamsPerAlliance,slots=2*k;if(teams.length<slots){alert(`Need at least ${slots} unique teams.`);return}if(!confirm('Generate a new qualification schedule? Existing qualification results and schedule will be replaced.'))return;
-    const rng=mulberry32(hashString(`${regional.eventName}|${teams.join(',')}|${regional.qualCount}|${Date.now()}`)),apps=Object.fromEntries(teams.map(t=>[t,0])),red=Object.fromEntries(teams.map(t=>[t,0])),blue=Object.fromEntries(teams.map(t=>[t,0])),last=Object.fromEntries(teams.map(t=>[t,-99])),partners=new Map(),opponents=new Map();const schedule=[];
-    for(let match=1;match<=regional.qualCount;match++){
-      let best=null,bestCost=Infinity;
-      for(let attempt=0;attempt<260;attempt++){
-        const scored=teams.map(t=>{const gap=match-last[t],recent=gap<=1?120:gap===2?55:gap===3?18:0;return{t,s:apps[t]*120+recent+rng()*55}}).sort((a,b)=>a.s-b.s);let selected=scored.slice(0,Math.min(teams.length,slots+Math.max(2,k))).map(x=>x.t);selected=shuffle(selected,rng).slice(0,slots);if(new Set(selected).size<slots)continue;selected=shuffle(selected,rng);const rr=selected.slice(0,k),bb=selected.slice(k);let cost=0;selected.forEach(t=>cost+=apps[t]*18);rr.forEach(t=>cost+=Math.abs((red[t]+1)-blue[t])*5);bb.forEach(t=>cost+=Math.abs(red[t]-(blue[t]+1))*5);for(let i=0;i<k;i++)for(let j=i+1;j<k;j++){cost+=(partners.get(pairKey(rr[i],rr[j]))||0)*42;cost+=(partners.get(pairKey(bb[i],bb[j]))||0)*42}for(const r of rr)for(const b of bb)cost+=(opponents.get(pairKey(r,b))||0)*18;if(cost<bestCost){bestCost=cost;best={red:rr,blue:bb}}}
-      if(!best){best={red:shuffle(teams,rng).slice(0,k),blue:shuffle(teams,rng).slice(k,2*k)}}
-      schedule.push({id:`Q${match}`,number:match,red:best.red,blue:best.blue,surrogates:[],status:'scheduled',result:null});[...best.red,...best.blue].forEach(t=>{apps[t]++;last[t]=match});best.red.forEach(t=>red[t]++);best.blue.forEach(t=>blue[t]++);for(let i=0;i<k;i++)for(let j=i+1;j<k;j++){partners.set(pairKey(best.red[i],best.red[j]),(partners.get(pairKey(best.red[i],best.red[j]))||0)+1);partners.set(pairKey(best.blue[i],best.blue[j]),(partners.get(pairKey(best.blue[i],best.blue[j]))||0)+1)}for(const r of best.red)for(const b of best.blue)opponents.set(pairKey(r,b),(opponents.get(pairKey(r,b))||0)+1)
-    }
-    // FRC-style surrogate marking when total slots cannot divide evenly across teams.
-    const base=Math.floor((regional.qualCount*slots)/teams.length),counts=Object.fromEntries(teams.map(t=>[t,0]));schedule.forEach(m=>[...m.red,...m.blue].forEach(t=>counts[t]++));teams.forEach(t=>{let extra=Math.max(0,counts[t]-base);for(let i=schedule.length-1;i>=0&&extra>0;i--){const m=schedule[i];if((m.red.includes(t)||m.blue.includes(t))&&!m.surrogates.includes(t)){m.surrogates.push(t);extra--}}});
-    regional.schedule=schedule;regional.results=regional.results.filter(r=>r.matchType!=='Qualification');regional.playoffResults={};regional.champion=null;saveRegionalStore();renderRegional();log(`Generated ${schedule.length} qualification matches for ${teams.length} teams.`,'sys')
-  }
-  function renderSchedule(){const body=$('scheduleBody'),map=rosterMap();$('scheduleSummary').textContent=regional.schedule.length?`${regional.schedule.length} quals · ${regional.schedule.filter(m=>m.status==='final').length} final`:'No schedule';body.innerHTML=regional.schedule.length?regional.schedule.map(m=>{const fmt=arr=>arr.map(t=>`${m.surrogates.includes(t)?'<span class="surrogate">★</span>':''}<b>${escapeHtml(t)}</b> ${escapeHtml(map[t]||'')}`).join(' · ');return`<tr class="schedule-row ${m.status==='final'?'final':''} ${currentMatchRef?.kind==='qual'&&currentMatchRef.id===m.id?'loaded':''}"><td><b>${m.number}</b></td><td>${fmt(m.red)}</td><td>${fmt(m.blue)}</td><td>${m.status==='final'?`${m.result.redScore}–${m.result.blueScore}`:'Scheduled'}</td><td><button class="btn xs ${m.status==='final'?'ghost':'blue'}" onclick="loadQualMatch('${m.id}')">Load</button></td></tr>`}).join(''):`<tr><td colspan="5" class="empty">Generate a qualification schedule from the roster.</td></tr>`}
-  function loadQualMatch(id){const m=regional.schedule.find(x=>x.id===id);if(!m)return;const names=rosterMap();state.eventMode='regional';state.eventName=regional.eventName;state.matchType='Qualification';state.matchNumber=m.number;state.totalMatches=regional.schedule.length;state.customMatchLabel='';state.teams={red:[...m.red],blue:[...m.blue]};state.teamMeta=buildTeamMeta(m.red,m.blue,names);state.surrogates={red:m.red.filter(t=>m.surrogates.includes(t)),blue:m.blue.filter(t=>m.surrogates.includes(t))};currentMatchRef={kind:'qual',id};$('eventMode').value='regional';$('headerEvent').textContent='Regional Mode';$('eventName').value=state.eventName;$('matchType').value='Qualification';$('matchNumber').value=m.number;$('totalMatches').value=regional.schedule.length;$('matchFormat').value=String(regional.teamsPerAlliance);renderManualTeamInputs({red:m.red.map(id=>({id,name:names[id]})),blue:m.blue.map(id=>({id,name:names[id]}))});refreshRanksForState();resetMatch(true);showView('match');$('loadedMatchNote').innerHTML=`Loaded <strong>${m.id}</strong> from Regional schedule.${m.surrogates.length?` Surrogate(s): <span class="surrogate">${m.surrogates.join(', ')}</span>`:''}`;log(`Loaded ${m.id} from Regional schedule.`,'sys')}
-  function loadNextUnplayedQual(){const m=regional.schedule.find(x=>x.status!=='final');if(m)loadQualMatch(m.id);else alert('All qualification matches are finalized.')}
-
-  function computeStandings(excludeResultId=null){const teams=uniqueRosterIds(),stats={};teams.forEach((t,i)=>stats[t]={id:t,name:rosterMap()[t]||`Team ${t}`,matches:0,w:0,l:0,t:0,rp:0,scoreNoPenalty:0,autoFuel:0,totalFuel:0,random:hashString(`${regional.eventName}|${t}`)});regional.schedule.forEach(m=>{if(m.status!=='final'||!m.result||m.id===excludeResultId)return;const r=m.result;['red','blue'].forEach(side=>{const A=side==='red'?'RED':'BLUE',opp=side==='red'?'BLUE':'RED',rp=r[`${side}Rp`]?.total??0,scoreNP=r[`${side}FuelPoints`]??0,auto=r[`${side}AutoFuelRaw`]??0,total=r[`${side}FuelRaw`]??0;(m[side]||[]).forEach(t=>{if(!stats[t]||m.surrogates.includes(t))return;const s=stats[t];s.matches++;s.rp+=rp;s.scoreNoPenalty+=scoreNP;s.autoFuel+=auto;s.totalFuel+=total;if(r.winner===A)s.w++;else if(r.winner==='TIE')s.t++;else s.l++})})});const list=Object.values(stats).map(s=>({...s,rs:s.matches?s.rp/s.matches:0,avgScore:s.matches?s.scoreNoPenalty/s.matches:0,avgAuto:s.matches?s.autoFuel/s.matches:0,avgFuel:s.matches?s.totalFuel/s.matches:0}));list.sort((a,b)=>b.rs-a.rs||b.avgScore-a.avgScore||b.avgAuto-a.avgAuto||b.avgFuel-a.avgFuel||a.random-b.random);list.forEach((s,i)=>s.rank=i+1);return list}
-  function finalizeQualResult(id,result){const m=regional.schedule.find(x=>x.id===id);if(!m)return;const before=Object.fromEntries(computeStandings(id).map(x=>[x.id,x.rank]));m.result=result;m.status='final';regional.results=regional.results.filter(r=>r.sourceId!==id);regional.results.push({...result,source:'regional-qualification',sourceId:id});saveRegionalStore();const after=computeStandings();regional.rankMoves={};after.forEach(x=>regional.rankMoves[x.id]=(before[x.id]||x.rank)-x.rank);saveRegionalStore();state.teamRanks=Object.fromEntries(after.map(x=>[x.id,x.rank]));state.rankMoves={...regional.rankMoves};renderRegional()}
-  function refreshRanksForState(){const standings=computeStandings();state.teamRanks=Object.fromEntries(standings.map(x=>[x.id,x.rank]));state.rankMoves={...regional.rankMoves}}
-  function renderRankings(){const list=computeStandings(),body=$('rankingsBody');body.innerHTML=list.length?list.map(s=>{const mv=regional.rankMoves?.[s.id]||0,cls=mv>0?'rank-up':mv<0?'rank-down':'rank-flat',arrow=mv>0?'↑':mv<0?'↓':'—';return`<tr><td><span class="ranknum">${s.rank}</span> <span class="${cls}">${arrow}</span></td><td><b>${escapeHtml(s.id)}</b><br><span style="color:#8193a7">${escapeHtml(s.name)}</span></td><td>${s.w}-${s.l}-${s.t}</td><td class="metric"><b>${s.rs.toFixed(2)}</b></td><td class="metric">${s.avgScore.toFixed(1)}</td><td class="metric">${s.avgAuto.toFixed(1)}</td><td class="metric">${s.avgFuel.toFixed(1)}</td></tr>`}).join(''):`<tr><td colspan="7" class="empty">Standings appear after roster/schedule creation.</td></tr>`}
-
-  function teamOptions(selected=''){return`<option value="">— select —</option>`+regional.roster.filter(t=>t.id).map(t=>`<option value="${escAttr(t.id)}" ${t.id===selected?'selected':''}>${escapeHtml(t.id)} · ${escapeHtml(t.name||'Team')}</option>`).join('')}
-  function renderAllianceBuilder(){const k=Number($('regionalTeamsPerAlliance').value)||regional.teamsPerAlliance||2;$('playoffTeamCount').value=k;regional.playoffAlliances=Array.from({length:8},(_,i)=>regional.playoffAlliances?.[i]||{seed:i+1,teams:[]});$('allianceBuilder').innerHTML=regional.playoffAlliances.map((a,i)=>`<div class="alliance-card"><h4>Alliance ${i+1}</h4>${Array.from({length:k},(_,slot)=>`<select onchange="setPlayoffAllianceTeam(${i},${slot},this.value)">${teamOptions(a.teams?.[slot]||'')}</select>`).join('')}</div>`).join('');renderPlayoffMatches()}
-  function setPlayoffAllianceTeam(ai,slot,val){if(!regional.playoffAlliances[ai])regional.playoffAlliances[ai]={seed:ai+1,teams:[]};regional.playoffAlliances[ai].teams[slot]=val;saveRegionalStore()}
-  function seedAllianceCaptains(){const ranks=computeStandings();for(let i=0;i<8;i++){regional.playoffAlliances[i]=regional.playoffAlliances[i]||{seed:i+1,teams:[]};regional.playoffAlliances[i].teams[0]=ranks[i]?.id||''}saveRegionalStore();renderAllianceBuilder()}
-  const PLAYOFF_DEFS=[
-    {key:'M1',label:'Upper Bracket - Round 1 - Match 1',r:'A1',b:'A8'},{key:'M2',label:'Upper Bracket - Round 1 - Match 2',r:'A4',b:'A5'},{key:'M3',label:'Upper Bracket - Round 1 - Match 3',r:'A2',b:'A7'},{key:'M4',label:'Upper Bracket - Round 1 - Match 4',r:'A3',b:'A6'},
-    {key:'M5',label:'Lower Bracket - Round 2 - Match 5',r:'L1',b:'L2'},{key:'M6',label:'Lower Bracket - Round 2 - Match 6',r:'L3',b:'L4'},{key:'M7',label:'Upper Bracket - Round 2 - Match 7',r:'W1',b:'W2'},{key:'M8',label:'Upper Bracket - Round 2 - Match 8',r:'W3',b:'W4'},
-    {key:'M9',label:'Lower Bracket - Round 3 - Match 9',r:'L7',b:'W6'},{key:'M10',label:'Lower Bracket - Round 3 - Match 10',r:'L8',b:'W5'},{key:'M11',label:'Upper Bracket - Round 4 - Match 11',r:'W7',b:'W8'},{key:'M12',label:'Lower Bracket - Round 4 - Match 12',r:'W10',b:'W9'},{key:'M13',label:'Lower Bracket - Round 5 - Match 13',r:'L11',b:'W12'},
-    {key:'F1',label:'Final 1',r:'W11',b:'W13'},{key:'F2',label:'Final 2',r:'W11',b:'W13'},{key:'F3',label:'Final Tiebreaker',r:'W11',b:'W13'}
-  ];
-  function buildPlayoffBracket(){const k=regional.teamsPerAlliance;for(let i=0;i<8;i++){const a=regional.playoffAlliances[i];if(!a||a.teams.filter(Boolean).length<k){alert(`Alliance ${i+1} needs ${k} teams.`);return}}const used=regional.playoffAlliances.flatMap(a=>a.teams.filter(Boolean));if(new Set(used).size!==used.length&&!confirm('A team appears on more than one playoff alliance. Continue anyway?'))return;regional.playoffResults={};regional.champion=null;saveRegionalStore();renderPlayoffMatches();log('2026-style 8-alliance double-elimination bracket built.','sys')}
-  function sourceAlliance(src){if(!src)return null;if(src.startsWith('A')){const seed=Number(src.slice(1)),a=regional.playoffAlliances?.[seed-1];return a&&a.teams?.filter(Boolean).length>=regional.teamsPerAlliance?seed:null}const kind=src[0],key=`M${src.slice(1)}`,res=regional.playoffResults[key];if(!res)return null;return kind==='W'?res.winnerSeed:res.loserSeed}
-  function finalSeriesWins(){const wins={};['F1','F2','F3'].forEach(k=>{const r=regional.playoffResults[k];if(r?.winnerSeed)wins[r.winnerSeed]=(wins[r.winnerSeed]||0)+1});return wins}
-  function playoffResolved(def){const r=sourceAlliance(def.r),b=sourceAlliance(def.b);if(def.key==='F3'){const wins=finalSeriesWins();if(Object.values(wins).some(v=>v>=2))return{r,b,needed:false};const f1=regional.playoffResults.F1,f2=regional.playoffResults.F2;if(!f1||!f2)return{r,b,needed:false};return{r,b,needed:f1.winnerSeed!==f2.winnerSeed}}return{r,b,needed:true}}
-  function allianceName(seed){if(!seed)return'TBD';return`Alliance ${seed}`}
-  function renderPlayoffMatches(){const root=$('playoffList');if(!root)return;const built=Object.keys(regional.playoffResults||{}).length||regional.playoffAlliances.every(a=>a?.teams?.filter(Boolean).length>=regional.teamsPerAlliance);root.innerHTML=PLAYOFF_DEFS.map(def=>{const x=playoffResolved(def),res=regional.playoffResults[def.key],ready=x.r&&x.b&&x.needed!==false;const hide=def.key==='F3'&&x.needed===false;return`<div class="playoff-row ${res?'done':''} ${hide?'hidden':''}"><div><b>${def.key}</b><br><span style="color:#7f92a6">${escapeHtml(def.label)}</span></div><div class="seed">${allianceName(x.r)}</div><div style="text-align:center">vs</div><div class="seed">${allianceName(x.b)}</div><div>${res?`${res.result.redScore}–${res.result.blueScore}`:`<button class="btn xs ${ready?'blue':'ghost'}" ${ready?'':'disabled'} onclick="loadPlayoffMatch('${def.key}')">Load</button>`}</div></div>`}).join('');const champ=getChampion();$('championBanner').classList.toggle('show',!!champ);$('championBanner').textContent=champ?`EVENT CHAMPION · ALLIANCE ${champ}`:''}
-  function loadPlayoffMatch(key){const def=PLAYOFF_DEFS.find(x=>x.key===key),x=playoffResolved(def);if(!def||!x.r||!x.b)return;const ar=regional.playoffAlliances[x.r-1],ab=regional.playoffAlliances[x.b-1],names=rosterMap();state.eventMode='regional';state.eventName=regional.eventName;state.matchType='Playoff';state.matchNumber=Number(key.replace(/\D/g,''))||1;state.totalMatches=13;state.customMatchLabel=def.label;state.teams={red:ar.teams.filter(Boolean).slice(0,regional.teamsPerAlliance),blue:ab.teams.filter(Boolean).slice(0,regional.teamsPerAlliance)};state.teamMeta=buildTeamMeta(state.teams.red,state.teams.blue,names);state.surrogates={red:[],blue:[]};state.teamRanks={};state.rankMoves={};currentMatchRef={kind:'playoff',key,redSeed:x.r,blueSeed:x.b};$('eventMode').value='regional';$('headerEvent').textContent='Regional Mode';$('eventName').value=state.eventName;$('matchType').value='Playoff';$('matchFormat').value=String(regional.teamsPerAlliance);renderManualTeamInputs({red:state.teams.red.map(id=>({id,name:names[id]})),blue:state.teams.blue.map(id=>({id,name:names[id]}))});resetMatch(true);showView('match');$('loadedMatchNote').innerHTML=`Loaded <strong>${def.label}</strong> · Alliance ${x.r} vs Alliance ${x.b}.`;log(`Loaded playoff ${key}.`,'sys')}
-  function finalizePlayoffResult(key,result){const ref=currentMatchRef,winnerSeed=result.winner==='RED'?ref.redSeed:ref.blueSeed,loserSeed=result.winner==='RED'?ref.blueSeed:ref.redSeed;regional.playoffResults[key]={winnerSeed,loserSeed,result};regional.results=regional.results.filter(r=>r.sourceId!==key);regional.results.push({...result,source:'regional-playoff',sourceId:key,winnerSeed,loserSeed});regional.champion=getChampion();saveRegionalStore();renderPlayoffMatches()}
-  function getChampion(){const wins=finalSeriesWins();const found=Object.entries(wins).find(([,v])=>v>=2);return found?Number(found[0]):regional.champion||null}
-
-  function renderRegional(){
-    $('regionalEventName').value=regional.eventName||'REBUILT Human Player Regional';$('regionalTeamsPerAlliance').value=String(regional.teamsPerAlliance||2);$('regionalTargetAppearances').value=String(regional.targetAppearances||8);$('regionalQualCount').value=regional.qualCount||12;$('playoffTeamCount').value=regional.teamsPerAlliance||2;renderRoster();updateQualSuggestion();renderSchedule();renderRankings();renderAllianceBuilder()
-  }
   function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+  function teamName(n,s=lastState){return n?(s?.teamMeta?.[n]?.name||`Team ${n}`):'Open Station'}
+  function rankFor(n,s=lastState){const r=s?.teamRanks?.[n];return Number.isFinite(Number(r))&&Number(r)>0?Number(r):'—'}
+  function moveFor(n,s=lastState){const m=Number(s?.rankMoves?.[n]||0);return m>0?'↑':m<0?'↓':'—'}
+  function previewRows(teams,alliance,cards,s=lastState){return (teams||[]).map((t,i)=>`<div class="preview-team ${alliance}"><div class="preview-team-main"><div class="preview-numberline"><span class="avatar"></span><span>${escapeHtml(t||'—')}</span>${i===0&&cards?.length?'<span class="card-chip">CARD</span>':''}</div><div class="preview-team-name">${escapeHtml(teamName(t,s))}</div></div><div class="rank-box">${rankFor(t,s)}</div></div>`).join('')}
+  function liveTeams(teams,cards){return (teams||[]).map((t,i)=>`<span class="live-team ${i===0&&cards?.length?'carded':''}"><i class="live-avatar">F</i>${escapeHtml(t||'—')}</span>`).join('')}
+  function resultRows(teams,alliance,cards,s=lastState){
+    return (teams||[]).map((t,i)=>`<div class="result-team"><div class="result-team-main"><span class="result-avatar">FRC</span><span>${escapeHtml(t||'—')}</span>${i===0&&cards?.length?'<span class="result-card">CARD</span>':''}</div><div class="result-rank"><span>${rankFor(t,s)}</span><span>${moveFor(t,s)}</span></div></div>`).join('')
+  }
 
-  /* ---------------- CSV / BACKUP ---------------- */
-  function csvEscape(v){const s=String(v??'');return/[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s}
-  function downloadText(name,text,type='text/plain'){const blob=new Blob([text],{type}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
-  function exportTeamsCsv(){const rows=[['team','name'],...regional.roster.map(t=>[t.id,t.name])];downloadText('rebuilt-teams.csv',rows.map(r=>r.map(csvEscape).join(',')).join('\n'),'text/csv')}
-  function parseCsv(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(q){if(c==='"'&&n==='"'){cell+='"';i++}else if(c==='"')q=false;else cell+=c}else{if(c==='"')q=true;else if(c===','){row.push(cell);cell=''}else if(c==='\n'){row.push(cell);rows.push(row);row=[];cell=''}else if(c!=='\r')cell+=c}}row.push(cell);if(row.some(x=>x!==''))rows.push(row);return rows}
-  async function importTeamsCsv(e){const f=e.target.files?.[0];if(!f)return;const rows=parseCsv(await f.text());const start=rows[0]?.[0]?.toLowerCase().includes('team')?1:0;regional.roster=rows.slice(start).filter(r=>r[0]?.trim()).map(r=>({id:r[0].trim(),name:(r[1]||'').trim()}));saveRegionalStore();renderRegional();e.target.value=''}
-  function exportScheduleCsv(){const rows=[['match','red','blue','surrogates','status'],...regional.schedule.map(m=>[m.id,m.red.join('|'),m.blue.join('|'),m.surrogates.join('|'),m.status])];downloadText('rebuilt-qualification-schedule.csv',rows.map(r=>r.map(csvEscape).join(',')).join('\n'),'text/csv')}
-  function resultCsvRows(results){return[['timestamp','event','match','type','redTeams','blueTeams','redScore','blueScore','winner','redRP','blueRP','redAutoFuelRaw','blueAutoFuelRaw','redFuelRaw','blueFuelRaw','redFuelPoints','blueFuelPoints','redPenalty','bluePenalty','shift1Active'],...results.map(r=>[r.timestamp,r.eventName,r.matchLabel,r.matchType,r.teams.red.join('|'),r.teams.blue.join('|'),r.redScore,r.blueScore,r.winner,r.redRp?.total??'',r.blueRp?.total??'',r.redAutoFuelRaw,r.blueAutoFuelRaw,r.redFuelRaw,r.blueFuelRaw,r.redFuelPoints,r.blueFuelPoints,r.redPenalty,r.bluePenalty,r.shift1Active])]} 
-  function exportResultObjectCsv(result,auto=false){const rows=resultCsvRows([result]);downloadText(`${result.matchShort||matchShort()}-result.csv`,rows.map(r=>r.map(csvEscape).join(',')).join('\n'),'text/csv')}
-  function exportCurrentResultCsv(){exportResultObjectCsv(resultSnapshot())}
-  function exportAllResultsCsv(){const rows=resultCsvRows(regional.results||[]);downloadText('rebuilt-event-results.csv',rows.map(r=>r.map(csvEscape).join(',')).join('\n'),'text/csv')}
-  function exportEventBackup(){regional.eventName=$('regionalEventName').value.trim()||regional.eventName;saveRegionalStore();downloadText(`rebuilt-event-${Date.now()}.json`,JSON.stringify({version:4,regional,tuning:{balance:state.balance,broadcast:state.broadcast}},null,2),'application/json')}
-  async function importEventBackup(e){const f=e.target.files?.[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!x.regional)throw new Error('Not a REBUILT event backup');regional={...emptyRegional(),...x.regional};if(x.tuning?.balance)Object.assign(state.balance,x.tuning.balance);if(x.tuning?.broadcast)Object.assign(state.broadcast,x.tuning.broadcast);saveRegionalStore();applyTuningToInputs();saveTuning();renderRegional();alert('Event backup restored.')}catch(err){alert(`Could not restore: ${err.message}`)}e.target.value=''}
-  function clearRegionalEvent(){if(!confirm('Clear the Regional roster, schedule, results and playoff bracket from this browser?'))return;regional=emptyRegional();saveRegionalStore();renderRegional()}
-  function exportSnapshot(){downloadText(`${matchShort()}-snapshot.json`,JSON.stringify(publicState(),null,2),'application/json')}
+  function thresholds(s=lastState){let e=Math.max(1,Number(s?.balance?.energizedThreshold)||Number($('energizedInput').value)||100),sp=Math.max(e+1,Number(s?.balance?.superchargedThreshold)||Number($('superchargedInput').value)||360);return{energized:e,supercharged:sp}}
+  function progressInfo(fuel){const th=thresholds();return fuel<th.energized?{target:th.energized}:{target:th.supercharged}}
+  function updateProgress(side,fuel){const info=progressInfo(fuel);$(`${side}ProgressText`).textContent=`${fuel} / ${info.target}`}
 
-  function clearLog(){$('logBox').innerHTML=''}
-  function log(msg,cls=''){const d=document.createElement('div');d.className=cls;d.textContent=`[${clock()}] ${msg}`;$('logBox').appendChild(d);$('logBox').scrollTop=$('logBox').scrollHeight}
+  function shiftInfo(s){
+    const p=s?.period||'',remain=Math.max(0,Number(s?.phaseTimeRemaining??0));
+    if(p==='MATCH_STARTING')return{index:'— / 6',remain:`:${String(Math.max(0,Number(s.countdown)||0)).padStart(2,'0')}`};
+    if(p==='PREMATCH')return{index:'AUTO',remain:':20'};
+    if(p==='AUTO'||p==='DELAY')return{index:'AUTO',remain:`:${String(p==='DELAY'?0:remain).padStart(2,'0')}`};
+    if(p==='TRANSITION')return{index:'1 / 6',remain:`:${String(remain).padStart(2,'0')}`};
+    if(p==='SHIFT1')return{index:'2 / 6',remain:`:${String(remain).padStart(2,'0')}`};
+    if(p==='SHIFT2')return{index:'3 / 6',remain:`:${String(remain).padStart(2,'0')}`};
+    if(p==='SHIFT3')return{index:'4 / 6',remain:`:${String(remain).padStart(2,'0')}`};
+    if(p==='SHIFT4')return{index:'5 / 6',remain:`:${String(remain).padStart(2,'0')}`};
+    if(p==='ENDGAME')return{index:'6 / 6',remain:`:${String(remain).padStart(2,'0')}`};
+    return{index:'6 / 6',remain:':00'};
+  }
 
-  // Startup
-  renderManualTeamInputs();loadQuickPreset();loadTuning();renderManualTeamInputs(getManualTeams());renderRegional();
-  const launchRoom=new URLSearchParams(location.search).get('room');$('roomInput').value=launchRoom?cleanRoom(launchRoom):(localStorage.getItem('rebuiltFmsRoom')||'HUB1');
-  state.eventName=$('eventName').value.trim()||state.eventName;state.eventMode=$('eventMode').value;render();connectNetwork();
+  function setHubIndicators(s){
+    const r=$('redHubActive'),b=$('blueHubActive');r.classList.add('off');b.classList.add('off');
+    const a=s?.activeAlliance||'NONE';
+    if(a==='RED')r.classList.remove('off');else if(a==='BLUE')b.classList.remove('off');else if(a==='BOTH'){r.classList.remove('off');b.classList.remove('off')}
+  }
+
+  function rpIcons(alliance,s){
+    const side=alliance==='RED'?'red':'blue',rp=s?.[`${side}Rp`];
+    if(rp){const slots=[];for(let i=0;i<3;i++)slots.push(rpIcon('trophy',i<Number(rp.win||0),'trophy'));slots.push(rpIcon('energized',!!rp.energized));slots.push(rpIcon('supercharged',!!rp.supercharged));slots.push(rpIcon('traversal',Number(rp.manual||0)>0));return slots.join('')}
+    const fuel=alliance==='RED'?(s.redFuel??0):(s.blueFuel??0),winner=s.winner,th=thresholds(s),trophies=winner===alliance?3:winner==='TIE'?1:0,energized=fuel>=th.energized,supercharged=fuel>=th.supercharged;const slots=[];for(let i=0;i<3;i++)slots.push(rpIcon('trophy',i<trophies,'trophy'));slots.push(rpIcon('energized',energized));slots.push(rpIcon('supercharged',supercharged));slots.push(rpIcon('traversal',false));return slots.join('')
+  }
+  function rpIcon(type,on,extra=''){return `<span class="rp-icon ${extra} ${on?'on':''}"><img src="${OFFICIAL_ICONS[type]}" alt="${type}"></span>`}
+
+  function render(s){
+    const previousScreen=lastScreen,previousPhase=lastPhase,previousCountdown=lastCountdown,previousTime=lastMatchTime;
+    const teams=s.teams||{red:[],blue:[]},redCards=s.redCards||[],blueCards=s.blueCards||[];
+    $('previewMatchLabel').textContent=s.matchLabel||'REBUILT Match';
+    $('liveMatchLabel').textContent=s.matchLabel||'REBUILT Match';
+    $('resultsMatchLabel').textContent=s.matchLabel||'REBUILT Match';
+    $('previewEvent').textContent=s.eventName||'REBUILT Event';
+
+    // Preview rendering remains the same.
+    $('redPreview').innerHTML=previewRows(teams.red,'red',redCards,s);
+    $('bluePreview').innerHTML=previewRows(teams.blue,'blue',blueCards,s);
+
+    $('redTeamNumbers').innerHTML=liveTeams(teams.red,redCards);
+    $('blueTeamNumbers').innerHTML=liveTeams(teams.blue,blueCards);
+    $('redResultTeams').innerHTML=resultRows(teams.red,'red',redCards,s);
+    $('blueResultTeams').innerHTML=resultRows(teams.blue,'blue',blueCards,s);
+
+    const redScore=Number(s.redScore??0),blueScore=Number(s.blueScore??0),redFuel=Number(s.redFuel??0),blueFuel=Number(s.blueFuel??0),redPenalty=Number(s.redPenalty??0),bluePenalty=Number(s.bluePenalty??0);
+    $('redLiveScore').textContent=redScore;$('blueLiveScore').textContent=blueScore;
+    updateProgress('red',redFuel);updateProgress('blue',blueFuel);
+
+    const t=Math.max(0,Number(s.displayTime??s.matchTime??20)),m=Math.floor(t/60),sec=t%60;
+    $('liveTimer').textContent=`${m}:${String(sec).padStart(2,'0')}`;
+    const si=shiftInfo(s);$('shiftIndex').textContent=si.index;$('shiftRemain').textContent=si.remain;
+    setHubIndicators(s);
+    $('liveTimerCell').classList.toggle('reviewing',s.screen==='REVIEW');
+
+    $('redAutoFuelResult').textContent=Number(s.redAutoFuelPoints??s.redAutoFuel??0);$('blueAutoFuelResult').textContent=Number(s.blueAutoFuelPoints??s.blueAutoFuel??0);
+    $('redFuelResult').textContent=Number(s.redTeleopFuelPoints??Math.max(0,Number(s.redFuelPoints??redFuel)-Number(s.redAutoFuelPoints??0)));$('blueFuelResult').textContent=Number(s.blueTeleopFuelPoints??Math.max(0,Number(s.blueFuelPoints??blueFuel)-Number(s.blueAutoFuelPoints??0)));
+    $('redPenaltyResult').textContent=redPenalty;$('bluePenaltyResult').textContent=bluePenalty;
+    $('redRp').innerHTML=rpIcons('RED',s);$('blueRp').innerHTML=rpIcons('BLUE',s);
+    $('qrMatch').textContent=s.matchShort||s.matchLabel||'match';
+    drawPseudoQr(`${roomName}|${s.matchLabel||''}|${redScore}|${blueScore}`);
+
+    const target=s.screen==='RESULTS'?'resultsScreen':s.screen==='PREVIEW'?'previewScreen':'matchScreen';
+    ['previewScreen','matchScreen','resultsScreen'].forEach(id=>$(id).classList.toggle('active',id===target));
+    renderCountdown(s,previousCountdown);
+
+    // Reset adapted sound schedule each time a fresh countdown begins.
+    if(s.period==='MATCH_STARTING'&&lastPeriod!=='MATCH_STARTING')playedTimedCues.clear();
+    handleAudio(previousPhase,s.phase,previousTime,t,s);
+
+    if(previousScreen!==s.screen&&s.screen==='RESULTS')startResultsReveal(s);
+
+    lastScreen=s.screen;lastPhase=s.phase;lastPeriod=s.period;lastCountdown=s.countdown;lastMatchTime=t;
+  }
+
+  function renderCountdown(s,previousCountdown){
+    const active=s.screen==='MATCH'&&s.phase==='MATCH STARTING'&&Number(s.countdown)>0;
+    $('countdown').classList.toggle('show',active);
+    if(!active)return;
+    const n=Number(s.countdown);
+    $('countNumber').textContent=n;
+    // Critical glitch fix: only restart the animation when the visible number actually changes.
+    if(previousCountdown!==n){
+      const el=$('countNumber');el.style.animationDuration=`${Math.max(180,Number(s?.broadcast?.countdownAnimMs)||420)}ms`;el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');
+    }
+  }
+
+  function eventHighKey(s){return `rebuiltHighScore:${cleanRoom(roomName)}:${String(s.eventName||'event').toUpperCase()}`}
+  function checkAndStoreEventHigh(s){
+    const current=Math.max(Number(s.redScore||0),Number(s.blueScore||0)),key=eventHighKey(s),previous=Number(localStorage.getItem(key)||0);
+    const high=current>previous;if(high)localStorage.setItem(key,String(current));return high
+  }
+
+  function setWinnerSlots(win,high){
+    const r=$('redWinnerSlot'),b=$('blueWinnerSlot'),rh=$('redHighScore'),bh=$('blueHighScore');
+    [r,b].forEach(el=>{el.classList.remove('show','animate','tie')});
+    [rh,bh].forEach(el=>el.classList.remove('show'));
+    r.querySelector('.winner-word').textContent='WINNER';b.querySelector('.winner-word').textContent='WINNER';
+    if(win==='RED'){r.classList.add('show');if(high)rh.classList.add('show')}
+    else if(win==='BLUE'){b.classList.add('show');if(high)bh.classList.add('show')}
+    else{
+      r.classList.add('show','tie');b.classList.add('show','tie');
+      r.querySelector('.winner-word').textContent='TIE';b.querySelector('.winner-word').textContent='TIE';
+      r.querySelector('.trophy-svg').style.visibility='hidden';b.querySelector('.trophy-svg').style.visibility='hidden';
+    }
+    if(win!=='TIE'){r.querySelector('.trophy-svg').style.visibility='visible';b.querySelector('.trophy-svg').style.visibility='visible'}
+  }
+
+  function startResultsReveal(s){
+    const token=++resultAnimationToken,screen=$('resultsScreen'),curtain=$('resultCurtain');
+    const red=Number(s.redScore||0),blue=Number(s.blueScore||0),win=s.winner||(red===blue?'TIE':red>blue?'RED':'BLUE'),high=checkAndStoreEventHigh(s);
+    const cfg={curtainHoldMs:250,curtainOpenMs:500,scoreCountMs:750,winnerHoldMs:550,winnerSlideMs:360,highScoreDelayMs:350,...(s.broadcast||{})};
+    const openAt=Math.max(0,Number(cfg.curtainHoldMs)),structureAt=openAt+Math.max(220,Number(cfg.curtainOpenMs)*.55),curtainGoneAt=openAt+Math.max(250,Number(cfg.curtainOpenMs)),scoreAt=curtainGoneAt+180,winnerAt=scoreAt+Math.max(250,Number(cfg.scoreCountMs))+Math.max(0,Number(cfg.winnerHoldMs)),highAt=winnerAt+Math.max(0,Number(cfg.highScoreDelayMs));
+    document.querySelectorAll('.curtain-red,.curtain-blue').forEach(el=>el.style.transitionDuration=`${Math.max(180,Number(cfg.curtainOpenMs))}ms`);
+    document.querySelectorAll('.winner-slot').forEach(el=>el.style.animationDuration=`${Math.max(180,Number(cfg.winnerSlideMs))}ms`);
+    screen.classList.remove('structure','score-reveal');screen.classList.add('pre-reveal');$('redResultScore').textContent='0';$('blueResultScore').textContent='0';setWinnerSlots(win,false);$('redWinnerSlot').classList.remove('animate');$('blueWinnerSlot').classList.remove('animate');$('redHighScore').classList.remove('show');$('blueHighScore').classList.remove('show');curtain.classList.remove('open');curtain.classList.add('show');void curtain.offsetWidth;
+    setTimeout(()=>{if(token===resultAnimationToken)curtain.classList.add('open')},openAt);
+    setTimeout(()=>{if(token===resultAnimationToken)screen.classList.add('structure')},structureAt);
+    setTimeout(()=>{if(token!==resultAnimationToken)return;curtain.classList.remove('show');screen.classList.remove('pre-reveal')},curtainGoneAt);
+    setTimeout(()=>{if(token!==resultAnimationToken)return;screen.classList.add('score-reveal');animateNumber($('redResultScore'),red,Math.max(250,Number(cfg.scoreCountMs)));animateNumber($('blueResultScore'),blue,Math.max(250,Number(cfg.scoreCountMs)))},scoreAt);
+    setTimeout(()=>{if(token!==resultAnimationToken)return;const target=win==='RED'?$('redWinnerSlot'):win==='BLUE'?$('blueWinnerSlot'):null;if(target)target.classList.add('animate');else{$('redWinnerSlot').classList.add('animate');$('blueWinnerSlot').classList.add('animate')}},winnerAt);
+    setTimeout(()=>{if(token!==resultAnimationToken||!high)return;if(win==='RED')$('redHighScore').classList.add('show');else if(win==='BLUE')$('blueHighScore').classList.add('show')},highAt);
+  }
+
+  function animateNumber(el,to,duration){
+    const start=performance.now();
+    function frame(now){const p=Math.min(1,(now-start)/duration),e=1-Math.pow(1-p,3);el.textContent=Math.round(to*e);if(p<1)requestAnimationFrame(frame)}
+    requestAnimationFrame(frame)
+  }
+
+  function drawPseudoQr(seed){
+    const svg=$('qrSvg');svg.innerHTML='';
+    let h=2166136261;for(const ch of seed){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}
+    const n=29,mods=Array.from({length:n},()=>Array(n).fill(false));
+    function finder(x,y){for(let yy=0;yy<7;yy++)for(let xx=0;xx<7;xx++){const edge=xx===0||yy===0||xx===6||yy===6,inner=xx>=2&&xx<=4&&yy>=2&&yy<=4;mods[y+yy][x+xx]=edge||inner}}
+    finder(0,0);finder(n-7,0);finder(0,n-7);
+    function reserved(x,y){return (x<8&&y<8)||(x>=n-8&&y<8)||(x<8&&y>=n-8)}
+    for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(!reserved(x,y)){h^=h<<13;h^=h>>>17;h^=h<<5;mods[y][x]=((h>>>0)&1)===1}
+    let d='';for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(mods[y][x])d+=`M${x} ${y}h1v1h-1z`;
+    svg.innerHTML=`<rect width="29" height="29" fill="white"/><path d="${d}" fill="#050505"/>`;
+  }
+
+  /* ---------------- Audio ---------------- */
+  function preloadCueAudio(){Object.entries(cueUrls).forEach(([name,url])=>{const a=new Audio(url);a.preload='auto';a.volume=1;cueAudio[name]=a;try{a.load()}catch(_){}})}
+  function applyAudioVolume(s=lastState){const v=Math.max(0,Math.min(1,Number(s?.broadcast?.audioVolume??100)/100));Object.values(cueAudio).forEach(a=>a.volume=v)}
+  function ensureAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx}
+  function tone(freq,start,dur,type='sine',vol=.12,endFreq=null){const ctx=ensureAudio(),o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(freq,ctx.currentTime+start);if(endFreq)o.frequency.exponentialRampToValueAtTime(endFreq,ctx.currentTime+start+dur);g.gain.setValueAtTime(.0001,ctx.currentTime+start);g.gain.exponentialRampToValueAtTime(vol,ctx.currentTime+start+.02);g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+start+dur);o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+start);o.stop(ctx.currentTime+start+dur+.02)}
+  function synthFoghorn(){tone(92,0,1.7,'sawtooth',.13,78);tone(138,0,1.7,'triangle',.07,118)}
+  function playCue(name){
+    if(!audioEnabled)return;ensureAudio();
+    if(name==='foghorn'){synthFoghorn();return}
+    const a=cueAudio[name];if(!a)return;
+    try{a.pause();a.currentTime=0;const p=a.play();if(p&&p.catch)p.catch(()=>{})}catch(_){}
+  }
+
+  function handleAudio(prevPhase,nextPhase,prevTime,t,s){
+    const prev=lastPeriod,next=s?.period||'';applyAudioVolume(s);
+    if(next==='ABORTED'&&prev!=='ABORTED'){playCue('foghorn');return}
+    if(next==='AUTO'&&prev!=='AUTO'&&!playedTimedCues.has('start')){playedTimedCues.add('start');playCue('start')}
+    if(next==='DELAY'&&prev!=='DELAY'&&!playedTimedCues.has('auto-buzzer')){playedTimedCues.add('auto-buzzer');playCue('buzzer')}
+    if(next==='TRANSITION'&&prev!=='TRANSITION'&&!playedTimedCues.has('bells')){playedTimedCues.add('bells');playCue('bells')}
+    if(/^SHIFT[1-4]$/.test(next)&&next!==prev&&!playedTimedCues.has(next)){playedTimedCues.add(next);playCue('shift')}
+    if(next==='ENDGAME'&&prev!=='ENDGAME'&&!playedTimedCues.has('steam')){playedTimedCues.add('steam');playCue('steam')}
+    if(next==='COMPLETE'&&prev!=='COMPLETE'&&!playedTimedCues.has('end-buzzer')){playedTimedCues.add('end-buzzer');playCue('buzzer')}
+  }
+
+  function testAudioSequence(){
+    ensureAudio();playCue('start');
+    setTimeout(()=>playCue('bells'),1600);
+    setTimeout(()=>playCue('shift'),3100);
+    setTimeout(()=>playCue('steam'),4500);
+    setTimeout(()=>playCue('buzzer'),6500);
+  }
+  function toggleAudio(){audioEnabled=!audioEnabled;$('audioPill').textContent=audioEnabled?'AUDIO ON':'AUDIO MUTED';$('audioPill').classList.add('show');setTimeout(()=>$('audioPill').classList.remove('show'),1200);if(audioEnabled)ensureAudio()}
+
+  /* ---------------- Camera / device ---------------- */
+  async function enumerateCameras(){try{const devices=await navigator.mediaDevices.enumerateDevices(),cams=devices.filter(d=>d.kind==='videoinput');$('cameraSelect').innerHTML=cams.map((c,i)=>`<option value="${c.deviceId}">${escapeHtml(c.label||`Camera ${i+1}`)}</option>`).join('')||'<option>No cameras found</option>'}catch(e){$('setupStatus').textContent=`Camera list: ${e.message}`}}
+  async function startCamera(){try{if(stream)stream.getTracks().forEach(t=>t.stop());const id=$('cameraSelect').value;stream=await navigator.mediaDevices.getUserMedia({video:id?{deviceId:{exact:id},width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:60,max:60}}:{width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:60,max:60}},audio:false});$('camera').srcObject=stream;$('camera').classList.remove('empty');applyCameraFit();await enumerateCameras();$('setupStatus').textContent='Camera live · FMS audio armed.'}catch(e){$('setupStatus').textContent=`Camera: ${e.message}`}}
+  function applyCameraFit(){$('camera').classList.toggle('contain',$('cameraFit').value==='contain')}
+  function saveDisplayPrefs(){const th=thresholds();$('energizedInput').value=th.energized;$('superchargedInput').value=th.supercharged;localStorage.setItem('rebuiltAudiencePrefs',JSON.stringify({energized:th.energized,supercharged:th.supercharged,fit:$('cameraFit').value}));applyCameraFit();if(lastState)render(lastState)}
+  function loadDisplayPrefs(){try{const p=JSON.parse(localStorage.getItem('rebuiltAudiencePrefs')||'null');if(!p)return;if(p.energized)$('energizedInput').value=p.energized;if(p.supercharged)$('superchargedInput').value=p.supercharged;if(p.fit)$('cameraFit').value=p.fit}catch(_){}}
+  function enterBroadcast(){ensureAudio();saveDisplayPrefs();$('setup').classList.add('hidden');resetCursorTimer()}
+  function showSetup(){$('setup').classList.remove('hidden');document.body.classList.remove('cursor-hidden')}
+  function toggleFullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()}
+  function resetCursorTimer(){document.body.classList.remove('cursor-hidden');clearTimeout(cursorTimer);if($('setup').classList.contains('hidden'))cursorTimer=setTimeout(()=>document.body.classList.add('cursor-hidden'),2500)}
+
+  document.addEventListener('mousemove',resetCursorTimer);
+  document.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='c')showSetup();if(k==='f')toggleFullscreen();if(k==='m')toggleAudio();if(e.key==='Escape'&&$('setup').classList.contains('hidden'))showSetup()});
+  $('cameraFit').addEventListener('change',applyCameraFit);
+
+  function demoState(kind){
+    const base={
+      eventName:'Stingycamp',matchLabel:'Qualification 3 of 10',matchShort:'Q3',
+      teams:{red:['Santi','Mau','Marianita'],blue:['Memo','Richard','Alam']},
+      redCards:[],blueCards:[],redFuel:7,blueFuel:5,redPenalty:0,bluePenalty:0,
+      redScore:7,blueScore:5,winner:'RED',displayTime:19,phaseTimeRemaining:19,period:'ENDGAME',activeAlliance:'BOTH',phase:'MAYHEM · END GAME',countdown:0,redAutoFuelPoints:2,blueAutoFuelPoints:1,redTeleopFuelPoints:5,blueTeleopFuelPoints:4
+    };
+    if(kind==='preview')return{...base,screen:'PREVIEW',matchLabel:'Qualification 4 of 10'};
+    if(kind==='review')return{...base,screen:'REVIEW'};
+    if(kind==='results')return{...base,screen:'RESULTS'};
+    if(kind==='countdown')return{...base,screen:'MATCH',displayTime:20,phaseTimeRemaining:3,period:'MATCH_STARTING',activeAlliance:'NONE',phase:'MATCH STARTING',countdown:3};
+    return{...base,screen:'MATCH'};
+  }
+
+  preloadCueAudio();loadDisplayPrefs();
+  $('roomInput').value=localStorage.getItem('rebuiltAudienceRoom')||'HUB1';
+  const params=new URLSearchParams(location.search),launchRoom=params.get('room'),demo=params.get('demo');
+  if(launchRoom)$('roomInput').value=cleanRoom(launchRoom);
+  if(demo){$('setup').classList.add('hidden');render(demoState(demo));}
+  else{enumerateCameras();connectNetwork();}
 </script>
 </body>
 </html>
