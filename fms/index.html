@@ -100,7 +100,7 @@
   </main>
 </div>
 <script>
-  let mqttClient=null, roomName='HUB1', timerInterval=null, heartbeatInterval=null;
+  let mqttClient=null, roomName='HUB1', timerInterval=null, countdownInterval=null, heartbeatInterval=null;
   let lastHubHeartbeat=0, refEventCount=0, stateSeq=0;
   const seenRefIds=new Set();
   const refActions=new Map();
@@ -109,7 +109,7 @@
   const state={
     eventName:'REBUILT Human Player Invitational', eventMode:'single', matchType:'Qualification', matchNumber:24,totalMatches:72,
     teams:{red:['2976','4096','6329'],blue:['1318','3476','5460']},
-    screen:'PREVIEW', running:false, matchTime:120, phase:'PRE-MATCH READY',
+    screen:'PREVIEW', running:false, matchTime:120, phase:'PRE-MATCH READY', countdown:0,
     redFuel:0,blueFuel:0,redPenalty:0,bluePenalty:0, redCards:[],blueCards:[],
     rawHubEvents:0,lastChute:null,lastAssignment:null, winner:null, underReview:false
   };
@@ -166,12 +166,25 @@
     if(t>0)return 'MAYHEM (60% BOOST)';
     return 'MATCH COMPLETE';
   }
-  function startMatch(){
-    resetMatch(false);state.screen='MATCH';state.running=true;state.phase=phaseForTime(state.matchTime);log('Match started.','sys');render();syncHub();broadcastState(true);
-    timerInterval=setInterval(()=>{state.matchTime--;state.phase=phaseForTime(state.matchTime);if(state.matchTime<=0){state.matchTime=0;state.running=false;clearInterval(timerInterval);determineWinner();log('Match complete. Awaiting review/results.','sys')}render();syncHub();broadcastState(false)},1000);
+  function beginRunningMatch(){
+    if(countdownInterval){clearInterval(countdownInterval);countdownInterval=null}
+    state.countdown=0;state.running=true;state.phase=phaseForTime(state.matchTime);log('Match started.','sys');render();syncHub();broadcastState(true);
+    timerInterval=setInterval(()=>{
+      state.matchTime--;state.phase=phaseForTime(state.matchTime);
+      if(state.matchTime<=0){state.matchTime=0;state.running=false;clearInterval(timerInterval);timerInterval=null;determineWinner();log('Match complete. Awaiting review/results.','sys')}
+      render();syncHub();broadcastState(false)
+    },1000);
   }
-  function abortMatch(){if(timerInterval)clearInterval(timerInterval);state.running=false;state.phase='MATCH ABORTED';log('MATCH ABORTED by scorekeeper.','err');render();syncHub();broadcastState(true)}
-  function resetMatch(showPreview=true){if(timerInterval)clearInterval(timerInterval);state.running=false;state.matchTime=120;state.phase='PRE-MATCH READY';state.redFuel=state.blueFuel=state.redPenalty=state.bluePenalty=0;state.rawHubEvents=0;state.lastChute=null;state.lastAssignment=null;state.winner=null;state.underReview=false;scoreHistory=[];if(showPreview)state.screen='PREVIEW';render();syncHub();broadcastState(true)}
+  function startMatch(){
+    resetMatch(false);state.screen='MATCH';state.running=false;state.phase='MATCH STARTING';state.countdown=3;log('Match start sequence armed: 3… 2… 1…','sys');render();syncHub();broadcastState(true);
+    countdownInterval=setInterval(()=>{
+      state.countdown--;
+      if(state.countdown<=0){beginRunningMatch();return}
+      render();syncHub();broadcastState(false);
+    },1000);
+  }
+  function abortMatch(){if(timerInterval){clearInterval(timerInterval);timerInterval=null}if(countdownInterval){clearInterval(countdownInterval);countdownInterval=null}state.countdown=0;state.running=false;state.phase='MATCH ABORTED';log('MATCH ABORTED by scorekeeper.','err');render();syncHub();broadcastState(true)}
+  function resetMatch(showPreview=true){if(timerInterval){clearInterval(timerInterval);timerInterval=null}if(countdownInterval){clearInterval(countdownInterval);countdownInterval=null}state.running=false;state.matchTime=120;state.phase='PRE-MATCH READY';state.countdown=0;state.redFuel=state.blueFuel=state.redPenalty=state.bluePenalty=0;state.rawHubEvents=0;state.lastChute=null;state.lastAssignment=null;state.winner=null;state.underReview=false;scoreHistory=[];if(showPreview)state.screen='PREVIEW';render();syncHub();broadcastState(true)}
 
   // Existing one-HUB assignment logic preserved, including 50/50 and 60% losing-alliance Mayhem bias.
   function handleBallScored(chute){
@@ -214,8 +227,8 @@
   function broadcastState(retain){$('stateSeq').textContent=stateSeq+1;if(!mqttClient?.connected)return;mqttClient.publish(`frchub/${roomName}/fms/state`,JSON.stringify(publicState()),{retain:!!retain,qos:0})}
   function render(){
     $('redScore').textContent=totalRed();$('blueScore').textContent=totalBlue();$('redFuel').textContent=state.redFuel;$('blueFuel').textContent=state.blueFuel;$('redPenalty').textContent=state.redPenalty;$('bluePenalty').textContent=state.bluePenalty;$('rpMini').textContent=state.redPenalty;$('bpMini').textContent=state.bluePenalty;
-    const m=Math.floor(state.matchTime/60),s=state.matchTime%60;$('timer').textContent=`${m}:${String(s).padStart(2,'0')}`;$('gamePhase').textContent=state.phase;$('matchLabel').textContent=matchText();$('matchId').textContent=matchShort();$('hubEvents').textContent=state.rawHubEvents;$('lastChute').textContent=state.lastChute===null?'--':`C${Number(state.lastChute)+1}`;$('lastAssignment').textContent=state.lastAssignment||'--';$('screenState').textContent=state.screen;
-    $('hubMode').textContent=state.phase.startsWith('FREE')?'HUB 50 / 50':state.phase.startsWith('RED')?'HUB → RED':state.phase.startsWith('BLUE')?'HUB → BLUE':state.phase.startsWith('MAYHEM')?'HUB MAYHEM 60%':'HUB READY';
+    const m=Math.floor(state.matchTime/60),s=state.matchTime%60;$('timer').textContent=`${m}:${String(s).padStart(2,'0')}`;$('gamePhase').textContent=state.phase==='MATCH STARTING'?`MATCH STARTING · ${state.countdown}`:state.phase;$('matchLabel').textContent=matchText();$('matchId').textContent=matchShort();$('hubEvents').textContent=state.rawHubEvents;$('lastChute').textContent=state.lastChute===null?'--':`C${Number(state.lastChute)+1}`;$('lastAssignment').textContent=state.lastAssignment||'--';$('screenState').textContent=state.screen;
+    $('hubMode').textContent=state.phase==='MATCH STARTING'?'HUB LOCKED':state.phase.startsWith('FREE')?'HUB 50 / 50':state.phase.startsWith('RED')?'HUB → RED':state.phase.startsWith('BLUE')?'HUB → BLUE':state.phase.startsWith('MAYHEM')?'HUB MAYHEM 60%':'HUB READY';
     ['preview','match','review','results'].forEach(x=>$(`p-${x}`).classList.toggle('active',state.screen===x.toUpperCase()));
   }
   function exportSnapshot(){const blob=new Blob([JSON.stringify(publicState(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${matchShort()}-snapshot.json`;a.click();URL.revokeObjectURL(a.href)}
