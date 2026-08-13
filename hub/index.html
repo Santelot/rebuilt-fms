@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>REBUILT HUB Console v2</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    :root {
+      --bg:#090d12; --panel:#111822; --panel2:#151f2b; --line:#263345; --text:#f3f6fa;
+      --muted:#8ea0b8; --green:#32d583; --yellow:#ffd23f; --red:#ff4d5f; --blue:#2f80ff;
+      --cyan:#50d5ff; --shadow:0 18px 50px rgba(0,0,0,.34);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(circle at 50% -10%,#17263b 0,#0b1119 38%,var(--bg) 75%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+    button,input,select{font:inherit}
+    .shell{max-width:1440px;margin:auto;padding:18px}
+    .topbar{display:flex;align-items:center;gap:14px;background:#0b121b;border:1px solid #1c2938;padding:13px 16px;border-radius:14px;box-shadow:var(--shadow)}
+    .brand{display:flex;align-items:center;gap:12px;min-width:230px}
+    .mark{width:42px;height:42px;border:2px solid #eef4ff;border-radius:10px;display:grid;place-items:center;font-weight:900;letter-spacing:-2px}
+    .brand h1{font-size:18px;line-height:1;margin:0}.brand small{display:block;color:var(--muted);margin-top:5px;letter-spacing:.08em;font-size:10px}
+    .status-row{display:flex;flex:1;gap:8px;flex-wrap:wrap;justify-content:center}
+    .chip{border:1px solid var(--line);background:#101923;border-radius:999px;padding:7px 10px;font-size:12px;color:#ccd6e4;display:flex;gap:7px;align-items:center}
+    .dot{width:8px;height:8px;border-radius:50%;background:#5e6d80;box-shadow:0 0 0 3px rgba(255,255,255,.03)}
+    .dot.online{background:var(--green);box-shadow:0 0 14px rgba(50,213,131,.6)}.dot.warn{background:var(--yellow)}.dot.offline{background:var(--red)}
+    .room{display:flex;gap:8px;align-items:center}.room input{width:86px;text-transform:uppercase}
+    input,select{background:#0b121b;border:1px solid #2a394d;color:#fff;border-radius:8px;padding:9px 10px;outline:none}.room input:focus,input:focus,select:focus{border-color:#4d8cff;box-shadow:0 0 0 3px rgba(47,128,255,.12)}
+    .btn{border:0;border-radius:8px;padding:9px 13px;font-weight:800;cursor:pointer;background:#273447;color:#fff}.btn:hover{filter:brightness(1.12)}.btn.primary{background:var(--blue)}.btn.green{background:var(--green);color:#04100a}.btn.danger{background:#8f2230}.btn.ghost{background:transparent;border:1px solid #314157}.btn.small{padding:7px 10px;font-size:12px}
+    .hero{display:grid;grid-template-columns:1.35fr .65fr;gap:14px;margin-top:14px}
+    .panel{background:linear-gradient(180deg,rgba(21,31,43,.96),rgba(13,20,29,.96));border:1px solid #223044;border-radius:14px;box-shadow:var(--shadow)}
+    .score-panel{display:grid;grid-template-columns:1fr 240px 1fr;min-height:174px;overflow:hidden}
+    .alliance{padding:22px 28px;display:flex;align-items:center;justify-content:space-between}.alliance.red{background:linear-gradient(90deg,rgba(163,16,34,.72),rgba(93,10,20,.32))}.alliance.blue{background:linear-gradient(270deg,rgba(0,82,146,.74),rgba(0,45,82,.28))}
+    .alliance .label{font-size:13px;text-transform:uppercase;font-weight:900;letter-spacing:.11em;opacity:.84}.score{font-size:84px;line-height:.9;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.05em}
+    .matchcore{display:flex;flex-direction:column;justify-content:center;align-items:center;background:#0c141f;border-left:1px solid #263448;border-right:1px solid #263448}.phase{font-size:12px;color:var(--yellow);font-weight:900;letter-spacing:.12em;text-transform:uppercase;text-align:center}.timer{font-size:52px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1;margin-top:7px}
+    .quick{padding:16px}.quick h3,.section-title{margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:#b8c6d8}.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{padding:11px;border:1px solid #263448;background:#0c141d;border-radius:9px}.metric strong{display:block;font-size:21px}.metric span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+    .grid-title{display:flex;align-items:center;justify-content:space-between;margin:20px 2px 10px}.grid-title h2{font-size:14px;margin:0;text-transform:uppercase;letter-spacing:.13em}.grid-title small{color:var(--muted)}
+    .chutes{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .chute{position:relative;overflow:hidden;padding:16px;border:1px solid #243246;border-radius:13px;background:#101823;min-height:190px;transition:.16s transform,.16s border-color,.16s box-shadow}.chute.active{border-color:var(--green);box-shadow:0 0 0 2px rgba(50,213,131,.13),0 0 28px rgba(50,213,131,.18);transform:translateY(-2px)}.chute:before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:#3a4a60}.chute.active:before{background:var(--green)}
+    .chute-head{display:flex;align-items:flex-start;justify-content:space-between}.chute-name{font-size:18px;font-weight:900}.pin{color:var(--muted);font-size:11px;margin-top:3px}.sensor-state{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#8899ad;border:1px solid #304056;border-radius:999px;padding:5px 7px}.chute.active .sensor-state{color:#07150e;background:var(--green);border-color:var(--green)}
+    .chute-count{font-size:44px;font-weight:900;line-height:1;margin:21px 0 7px;font-variant-numeric:tabular-nums}.submetrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}.submetrics div{border-top:1px solid #253346;padding-top:8px}.submetrics b{font-size:13px}.submetrics span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
+    .lower{display:grid;grid-template-columns:1.05fr .95fr;gap:14px;margin-top:14px}.section{padding:16px}.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.control{background:#0c141d;border:1px solid #243246;border-radius:10px;padding:11px}.control label{display:block;font-size:11px;font-weight:800;color:#c4cfdd;margin-bottom:7px}.inline{display:flex;gap:8px;align-items:center}.inline input{width:100%}.toggle{display:flex;align-items:center;justify-content:space-between;gap:14px}.toggle input{width:18px;height:18px;accent-color:var(--blue)}
+    .warning{margin-top:10px;border:1px solid rgba(255,210,63,.34);background:rgba(255,210,63,.07);color:#e6d07a;padding:10px;border-radius:9px;font-size:11px;line-height:1.45}
+    .diag-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}.diag{background:#0c141d;border:1px solid #243246;border-radius:10px;padding:11px}.diag strong{display:block;font-size:20px}.diag span{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.07em}
+    .log{height:218px;overflow:auto;background:#05090d;border:1px solid #1b2634;border-radius:10px;padding:10px;font:11px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#a8c6b5}.log .err{color:#ff8795}.log .warn{color:#ffe27a}.log .info{color:#8bc2ff}
+    .foot{display:flex;justify-content:space-between;color:#62748a;font-size:10px;margin:10px 3px 0}
+    @media(max-width:980px){.topbar{align-items:flex-start;flex-wrap:wrap}.status-row{justify-content:flex-start}.room{width:100%}.hero,.lower{grid-template-columns:1fr}.chutes{grid-template-columns:repeat(2,1fr)}.score-panel{grid-template-columns:1fr 170px 1fr}.score{font-size:64px}}
+    @media(max-width:620px){.shell{padding:10px}.chutes{grid-template-columns:1fr}.score-panel{grid-template-columns:1fr 130px 1fr}.alliance{padding:16px 12px}.score{font-size:46px}.timer{font-size:34px}.controls{grid-template-columns:1fr}.diag-row{grid-template-columns:1fr 1fr}.brand{min-width:auto}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><div class="mark">HUB</div><div><h1>REBUILT HUB Console</h1><small>HARDWARE RECEIVER · V2</small></div></div>
+    <div class="status-row">
+      <div class="chip"><span id="usbDot" class="dot offline"></span><span id="serialStatus">USB OFFLINE</span></div>
+      <div class="chip"><span id="mqttDot" class="dot offline"></span><span id="netStatus">MQTT OFFLINE</span></div>
+      <div class="chip"><span id="fmsDot" class="dot warn"></span><span id="fmsStatus">FMS WAITING</span></div>
+      <div class="chip">LATENCY <b id="rttValue">-- ms</b></div>
+      <div class="chip">EVENTS <b id="eventTotal">0</b></div>
+    </div>
+    <div class="room">
+      <input id="roomInput" value="HUB1" aria-label="Room" />
+      <button class="btn primary" onclick="joinNetwork()">Join Room</button>
+      <button class="btn green" onclick="connectArduino()">Connect Arduino</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="panel score-panel">
+      <div class="alliance red"><div><div class="label">Red Alliance</div><div id="redScore" class="score">0</div></div></div>
+      <div class="matchcore"><div id="phaseDisplay" class="phase">PRE-MATCH</div><div id="timerDisplay" class="timer">02:00</div></div>
+      <div class="alliance blue"><div style="margin-left:auto;text-align:right"><div class="label">Blue Alliance</div><div id="blueScore" class="score">0</div></div></div>
+    </div>
+    <div class="panel quick">
+      <h3>System telemetry</h3>
+      <div class="quick-grid">
+        <div class="metric"><strong id="triggerRate">0.0/s</strong><span>Trigger rate · 10s</span></div>
+        <div class="metric"><strong id="lastGap">-- ms</strong><span>Last event gap</span></div>
+        <div class="metric"><strong id="acceptedTotal">0</strong><span>Published</span></div>
+        <div class="metric"><strong id="filteredTotal">0</strong><span>Filtered</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid-title"><h2>Sensor channels</h2><small>Derived telemetry from the existing TRIGGER stream</small></div>
+  <section class="chutes" id="chuteGrid"></section>
+
+  <section class="lower">
+    <div class="panel section">
+      <div class="section-title">Calibration & test tools</div>
+      <div class="controls">
+        <div class="control toggle"><div><label style="margin:0">Software trigger lockout</label><div style="font-size:10px;color:var(--muted);margin-top:3px">OFF preserves your original behavior</div></div><input id="filterEnabled" type="checkbox" onchange="saveSettings()" /></div>
+        <div class="control"><label>Minimum gap between accepted triggers</label><div class="inline"><input id="minGap" type="number" min="0" max="2000" step="10" value="120" onchange="saveSettings()"/><span style="color:var(--muted);font-size:11px">ms</span></div></div>
+        <div class="control"><label>Visual pulse duration</label><div class="inline"><input id="flashMs" type="number" min="40" max="1200" step="20" value="200" onchange="saveSettings()"/><span style="color:var(--muted);font-size:11px">ms</span></div></div>
+        <div class="control"><label>Manual test event</label><div class="inline"><select id="testChute"><option value="0">Chute 1</option><option value="1">Chute 2</option><option value="2">Chute 3</option><option value="3">Chute 4</option></select><button class="btn small" onclick="manualTest()">Trigger</button></div></div>
+      </div>
+      <div class="warning"><b>Safety by design:</b> the software lockout is disabled by default. With it OFF, every Arduino <code>TRIGGER:n</code> is published exactly as in your original receiver. Enable it only when you intentionally want a software-side minimum gap.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:11px"><button class="btn ghost small" onclick="resetTelemetry()">Reset telemetry</button><button class="btn ghost small" onclick="copyLog()">Copy log</button><button class="btn ghost small" onclick="clearLog()">Clear log</button></div>
+    </div>
+
+    <div class="panel section">
+      <div class="section-title">Diagnostics</div>
+      <div class="diag-row">
+        <div class="diag"><strong id="lastTrigger">--</strong><span>Last trigger</span></div>
+        <div class="diag"><strong id="lastFms">--</strong><span>Last FMS sync</span></div>
+        <div class="diag"><strong id="roomLabel">HUB1</strong><span>MQTT room</span></div>
+      </div>
+      <div id="logBox" class="log"><div class="info">[System] Console ready. Auto-joining room HUB1…</div></div>
+    </div>
+  </section>
+  <div class="foot"><span>REBUILT Human Player FMS · HUB Console</span><span>Arduino detection path preserved</span></div>
+</div>
+
+<script>
+  let port, reader, mqttClient;
+  let roomName = "HUB1";
+  let lastPingSent = 0;
+  let lastFmsSyncAt = 0;
+  let pingTicker = null;
+
+  const chutes = Array.from({length:4}, (_,i) => ({index:i, count:0, accepted:0, filtered:0, lastAt:0, prevAt:0, events:[]}));
+  let totalAccepted = 0, totalFiltered = 0, totalEvents = 0;
+  let recentEvents = [];
+
+  const $ = id => document.getElementById(id);
+  const nowClock = () => new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+  function renderChutes(){
+    $('chuteGrid').innerHTML = chutes.map(c => `
+      <article id="chute-${c.index}" class="chute">
+        <div class="chute-head"><div><div class="chute-name">Chute ${c.index+1}</div><div class="pin">Arduino pin ${7+c.index}</div></div><span class="sensor-state">READY</span></div>
+        <div id="count-${c.index}" class="chute-count">0</div>
+        <div class="submetrics">
+          <div><b id="gap-${c.index}">-- ms</b><span>Last gap</span></div>
+          <div><b id="age-${c.index}">Never</b><span>Last event</span></div>
+          <div><b id="accepted-${c.index}">0</b><span>Published</span></div>
+          <div><b id="filtered-${c.index}">0</b><span>Filtered</span></div>
+        </div>
+      </article>`).join('');
+  }
+
+  function loadSettings(){
+    try {
+      const s = JSON.parse(localStorage.getItem('rebuiltHubSettings') || '{}');
+      $('filterEnabled').checked = !!s.filterEnabled;
+      if(Number.isFinite(s.minGap)) $('minGap').value = s.minGap;
+      if(Number.isFinite(s.flashMs)) $('flashMs').value = s.flashMs;
+      if(s.room) $('roomInput').value = s.room;
+    } catch(_) {}
+  }
+  function saveSettings(){
+    localStorage.setItem('rebuiltHubSettings', JSON.stringify({
+      filterEnabled:$('filterEnabled').checked,
+      minGap:Number($('minGap').value)||0,
+      flashMs:Number($('flashMs').value)||200,
+      room:$('roomInput').value.trim().toUpperCase()||'HUB1'
+    }));
+  }
+
+  function setDot(id, state){ $(id).className = `dot ${state}`; }
+
+  function joinNetwork() {
+    roomName = $('roomInput').value.trim().toUpperCase() || 'HUB1';
+    $('roomInput').value = roomName; $('roomLabel').textContent = roomName; saveSettings();
+    log(`Connecting to MQTT broker on Room ${roomName}…`, 'info');
+    if (mqttClient) { try { mqttClient.end(true); } catch(_) {} }
+    mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', { reconnectPeriod: 1500, connectTimeout: 5000 });
+
+    mqttClient.on('connect', () => {
+      $('netStatus').textContent = 'MQTT ONLINE'; setDot('mqttDot','online');
+      log(`Joined Network Room [${roomName}]`, 'info');
+      mqttClient.subscribe(`frchub/${roomName}/commands`);
+      startLocalPing();
+    });
+
+    mqttClient.on('message', (topic, message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        if (data.type === 'PING') {
+          if (Number.isFinite(data.timestamp)) $('rttValue').textContent = `${Math.max(0, Date.now()-data.timestamp)} ms`;
+          mqttClient.publish(`frchub/${roomName}/events`, JSON.stringify({ type:'PONG', timestamp:data.timestamp }));
+          lastFmsSyncAt = Date.now();
+          $('fmsStatus').textContent = 'FMS ONLINE'; setDot('fmsDot','online');
+        } else if (data.type === 'SYNC_TIME') {
+          $('timerDisplay').textContent = data.timeStr;
+          $('phaseDisplay').textContent = data.phase;
+          lastFmsSyncAt = Date.now();
+          $('lastFms').textContent = nowClock(); $('fmsStatus').textContent = 'FMS ONLINE'; setDot('fmsDot','online');
+        } else if (data.type === 'UPDATE_SCORES') {
+          $('redScore').textContent = data.red;
+          $('blueScore').textContent = data.blue;
+          lastFmsSyncAt = Date.now();
+        } else if (data.type === 'HUB_PONG' && data.timestamp === lastPingSent) {
+          $('rttValue').textContent = `${Date.now()-data.timestamp} ms`;
+        }
+      } catch (e) { log(`Message parse error: ${e.message}`, 'err'); }
+    });
+
+    mqttClient.on('reconnect', () => { $('netStatus').textContent='MQTT RECONNECTING'; setDot('mqttDot','warn'); });
+    mqttClient.on('close', () => { $('netStatus').textContent='MQTT OFFLINE'; setDot('mqttDot','offline'); });
+    mqttClient.on('error', err => log(`MQTT error: ${err.message || err}`, 'err'));
+  }
+
+  function startLocalPing(){
+    clearInterval(pingTicker);
+    pingTicker = setInterval(() => {
+      if(mqttClient?.connected){
+        lastPingSent = Date.now();
+        mqttClient.publish(`frchub/${roomName}/hub/telemetry`, JSON.stringify({ type:'HUB_HEARTBEAT', timestamp:lastPingSent, totalEvents, totalAccepted, totalFiltered }));
+      }
+      if(lastFmsSyncAt && Date.now()-lastFmsSyncAt > 3500){ $('fmsStatus').textContent='FMS WAITING'; setDot('fmsDot','warn'); }
+    },1000);
+  }
+
+  async function connectArduino() {
+    try {
+      port = await navigator.serial.requestPort();
+      await port.open({ baudRate: 9600 });
+      $('serialStatus').textContent = 'USB ONLINE'; setDot('usbDot','online');
+      log('Arduino USB connected successfully.', 'info');
+      readSerial();
+    } catch (err) {
+      $('serialStatus').textContent = 'USB OFFLINE'; setDot('usbDot','offline');
+      log(`Serial error: ${err.message}`, 'err');
+    }
+  }
+
+  // Existing serial behavior preserved: read newline-delimited data and react to TRIGGER:n.
+  async function readSerial() {
+    const textDecoder = new TextDecoderStream();
+    port.readable.pipeTo(textDecoder.writable);
+    reader = textDecoder.readable.getReader();
+    let buffer = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += value;
+      let lines = buffer.split("\n");
+      buffer = lines.pop();
+      for (let line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith("TRIGGER:")) {
+          const chuteIndex = Number(trimmed.split(":")[1]);
+          processTrigger(chuteIndex, false);
+        }
+      }
+    }
+  }
+
+  function processTrigger(chuteIndex, manual=false){
+    if(!Number.isInteger(chuteIndex) || chuteIndex<0 || chuteIndex>3){ log(`Ignored invalid chute index: ${chuteIndex}`, 'warn'); return; }
+    const now = Date.now(); const c = chutes[chuteIndex];
+    c.prevAt = c.lastAt; c.lastAt = now; c.count++; totalEvents++;
+    const gap = c.prevAt ? now-c.prevAt : null;
+    recentEvents.push(now); recentEvents = recentEvents.filter(t => now-t <= 10000);
+    flashChute(chuteIndex);
+
+    const filtering = $('filterEnabled').checked;
+    const minGap = Math.max(0, Number($('minGap').value)||0);
+    const rejected = filtering && gap !== null && gap < minGap;
+
+    if(rejected){
+      c.filtered++; totalFiltered++;
+      log(`${manual?'TEST ':''}Chute ${chuteIndex+1} filtered (${gap} ms < ${minGap} ms).`, 'warn');
+    } else {
+      c.accepted++; totalAccepted++;
+      if (mqttClient && mqttClient.connected) {
+        // Original publish shape preserved for compatibility.
+        mqttClient.publish(`frchub/${roomName}/events`, JSON.stringify({ type:'TRIGGER', chute:String(chuteIndex) }));
+        log(`${manual?'TEST ':''}Published TRIGGER for Chute ${chuteIndex+1}${gap!==null?` · gap ${gap} ms`:''}.`);
+      } else {
+        log(`${manual?'TEST ':''}Triggered Chute ${chuteIndex+1} (network not joined).`, 'warn');
+      }
+    }
+    updateTelemetry(chuteIndex, gap);
+  }
+
+  function flashChute(idx) {
+    const el = $(`chute-${idx}`); if(!el) return;
+    el.classList.add('active');
+    setTimeout(() => el.classList.remove('active'), Math.max(40, Number($('flashMs').value)||200));
+  }
+
+  function updateTelemetry(idx, gap){
+    const c=chutes[idx];
+    $(`count-${idx}`).textContent=c.count;
+    $(`accepted-${idx}`).textContent=c.accepted;
+    $(`filtered-${idx}`).textContent=c.filtered;
+    $(`gap-${idx}`).textContent=gap===null?'-- ms':`${gap} ms`;
+    $('eventTotal').textContent=totalEvents; $('acceptedTotal').textContent=totalAccepted; $('filteredTotal').textContent=totalFiltered;
+    $('lastGap').textContent=gap===null?'-- ms':`${gap} ms`; $('lastTrigger').textContent=`C${idx+1} · ${nowClock()}`;
+    $('triggerRate').textContent=`${(recentEvents.length/10).toFixed(1)}/s`;
+  }
+
+  setInterval(()=>{
+    const now=Date.now(); recentEvents=recentEvents.filter(t=>now-t<=10000); $('triggerRate').textContent=`${(recentEvents.length/10).toFixed(1)}/s`;
+    chutes.forEach(c=>{ const age=$(`age-${c.index}`); if(age) age.textContent=c.lastAt ? (now-c.lastAt<1000?'Now':`${((now-c.lastAt)/1000).toFixed(1)} s`) : 'Never'; });
+  },250);
+
+  function manualTest(){ processTrigger(Number($('testChute').value), true); }
+  function resetTelemetry(){
+    chutes.forEach(c=>Object.assign(c,{count:0,accepted:0,filtered:0,lastAt:0,prevAt:0,events:[]}));
+    totalAccepted=totalFiltered=totalEvents=0; recentEvents=[];
+    renderChutes(); $('eventTotal').textContent='0'; $('acceptedTotal').textContent='0'; $('filteredTotal').textContent='0'; $('lastGap').textContent='-- ms'; $('lastTrigger').textContent='--'; $('triggerRate').textContent='0.0/s';
+    log('Telemetry counters reset. Match scores were not changed.', 'info');
+  }
+  function clearLog(){ $('logBox').innerHTML=''; }
+  async function copyLog(){ try{ await navigator.clipboard.writeText($('logBox').innerText); log('Log copied to clipboard.', 'info'); }catch(e){ log('Clipboard unavailable.', 'warn'); } }
+  function log(msg, cls='') { const row=document.createElement('div'); row.className=cls; row.textContent=`[${nowClock()}] ${msg}`; $('logBox').appendChild(row); $('logBox').scrollTop=$('logBox').scrollHeight; }
+
+  renderChutes(); loadSettings();
+  const launchRoom = new URLSearchParams(location.search).get('room');
+  if (launchRoom) $('roomInput').value = launchRoom.trim().toUpperCase();
+  joinNetwork();
+</script>
+</body>
+</html>
