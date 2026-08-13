@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>REBUILT FMS Backstage</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    :root{--bg:#090d12;--panel:#121923;--panel2:#0e151e;--line:#273548;--text:#f4f7fb;--muted:#8fa1b8;--red:#d8192f;--blue:#0872b8;--yellow:#ffe000;--green:#2dd881;--orange:#ff9f43}
+    *{box-sizing:border-box} body{margin:0;background:#080c11;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}button,input,select{font:inherit}
+    .shell{max-width:1600px;margin:auto;padding:14px}.top{display:flex;gap:12px;align-items:center;background:#0b121a;border:1px solid #1f2b3b;border-radius:12px;padding:12px 14px;position:sticky;top:0;z-index:4;box-shadow:0 15px 40px rgba(0,0,0,.35)}
+    .brand{font-weight:950;letter-spacing:-.03em;font-size:19px}.brand small{display:block;font-size:9px;color:var(--muted);letter-spacing:.12em;margin-top:3px}.spacer{flex:1}.chip{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#0f1822;border-radius:999px;padding:7px 10px;font-size:11px;color:#cbd7e6}.dot{width:8px;height:8px;border-radius:50%;background:#64748b}.dot.on{background:var(--green);box-shadow:0 0 12px rgba(45,216,129,.5)}.dot.warn{background:var(--yellow)}
+    input,select{background:#0b121a;border:1px solid #2c3b50;color:#fff;padding:8px 9px;border-radius:7px;outline:none}.top input{width:82px;text-transform:uppercase}.btn{border:0;border-radius:8px;padding:9px 13px;font-weight:900;cursor:pointer;color:#fff;background:#29374b}.btn:hover{filter:brightness(1.1)}.btn.blue{background:#176fd1}.btn.green{background:var(--green);color:#07120c}.btn.yellow{background:var(--yellow);color:#111}.btn.red{background:#a61f32}.btn.ghost{background:transparent;border:1px solid #34465f}.btn.sm{font-size:11px;padding:7px 9px}
+    .main{display:grid;grid-template-columns:330px 1fr 390px;gap:12px;margin-top:12px}.panel{background:linear-gradient(180deg,#111923,#0d141d);border:1px solid #223044;border-radius:12px;overflow:hidden}.panel h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#b8c6d8;margin:0;padding:12px 14px;border-bottom:1px solid #223044}.body{padding:13px}.field{display:grid;grid-template-columns:1fr 1fr;gap:9px}.field label{font-size:10px;color:var(--muted);display:block;margin-bottom:5px}.field input,.field select{width:100%}.field .wide{grid-column:1/-1}
+    .teams{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.teamcol{border-radius:9px;padding:10px}.teamcol.red{background:rgba(216,25,47,.12);border:1px solid rgba(216,25,47,.32)}.teamcol.blue{background:rgba(8,114,184,.13);border:1px solid rgba(8,114,184,.35)}.teamcol b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.09em;margin-bottom:7px}.teamcol input{width:100%;margin-top:6px}
+    .stage{display:grid;grid-template-rows:auto auto 1fr;min-height:740px}.phasebar{display:flex;gap:6px;padding:10px;background:#0a1017;border-bottom:1px solid #223044;overflow:auto}.phase-pill{flex:1;min-width:90px;text-align:center;border:1px solid #2b3a4f;color:#8191a7;border-radius:6px;padding:7px 5px;font-size:9px;font-weight:900;letter-spacing:.08em}.phase-pill.active{color:#101010;background:var(--yellow);border-color:var(--yellow)}
+    .scorecard{display:grid;grid-template-columns:1fr 250px 1fr;min-height:230px}.alliance{padding:20px;display:flex;flex-direction:column;justify-content:center}.alliance.red{background:linear-gradient(90deg,#8d0f20,#5e0b17)}.alliance.blue{background:linear-gradient(270deg,#075f9a,#063e66)}.alliance .name{font-size:14px;font-weight:900;text-transform:uppercase}.bigscore{font-size:92px;font-weight:950;line-height:.95;letter-spacing:-.06em}.breakdown{display:flex;gap:10px;font-size:11px;opacity:.9;margin-top:10px}.core{background:#eef0f3;color:#111;display:flex;align-items:center;justify-content:center;flex-direction:column;border-left:1px solid #fff;border-right:1px solid #fff}.core .match{font-size:11px;font-weight:900;text-transform:uppercase}.timer{font-size:58px;font-weight:950;line-height:1;margin:8px 0}.gamephase{font-size:11px;font-weight:950;text-transform:uppercase;text-align:center;max-width:210px}.hubmode{margin-top:9px;border:2px solid #111;padding:5px 8px;font-size:10px;font-weight:950}
+    .actions{padding:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;border-bottom:1px solid #223044}.actions .btn{min-height:46px}.actions .btn.active{box-shadow:0 0 0 2px #fff inset}
+    .controlgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px}.mini{background:#0a1118;border:1px solid #223044;border-radius:9px;padding:11px}.mini h3{font-size:10px;text-transform:uppercase;letter-spacing:.11em;color:#b6c4d7;margin:0 0 9px}.adj{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;margin-top:6px}.adj .val{font-weight:900;font-variant-numeric:tabular-nums}.kv{display:flex;justify-content:space-between;border-top:1px solid #1f2d3e;padding:7px 0;font-size:11px}.kv:first-of-type{border-top:0}.kv span{color:var(--muted)}
+    .log{height:308px;overflow:auto;background:#05080c;padding:10px;font:10.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#a6c6b4}.log div{margin-bottom:2px}.log .event{color:#fff}.log .ref{color:#ffd56a}.log .err{color:#ff8694}.log .sys{color:#88baff}
+    .statusgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{background:#0a1118;border:1px solid #223044;border-radius:8px;padding:10px}.stat strong{display:block;font-size:19px}.stat span{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+    .right-buttons{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.notice{font-size:10px;line-height:1.45;color:#b8c5d5;border:1px solid #2a3a4f;background:#0c141d;padding:9px;border-radius:8px;margin-top:10px}.danger-note{border-color:rgba(255,159,67,.35);background:rgba(255,159,67,.06);color:#e7c18e}
+    @media(max-width:1200px){.main{grid-template-columns:300px 1fr}.main>.panel:last-child{grid-column:1/-1}.scorecard{grid-template-columns:1fr 210px 1fr}.bigscore{font-size:70px}}
+    @media(max-width:820px){.main{grid-template-columns:1fr}.top{flex-wrap:wrap}.scorecard{grid-template-columns:1fr 155px 1fr}.bigscore{font-size:52px}.timer{font-size:42px}.actions{grid-template-columns:1fr 1fr}.controlgrid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="brand">REBUILT FMS <small>BACKSTAGE / SCOREKEEPER</small></div>
+    <div class="chip"><span id="mqttDot" class="dot"></span><span id="mqttStatus">MQTT OFFLINE</span></div>
+    <div class="chip"><span id="hubDot" class="dot warn"></span><span id="hubStatus">HUB WAITING</span></div>
+    <div class="chip"><span id="refDot" class="dot warn"></span><span id="refStatus">REF WAITING</span></div>
+    <div class="spacer"></div>
+    <input id="roomInput" value="HUB1" aria-label="room" />
+    <button class="btn blue" onclick="connectNetwork()">Connect</button>
+  </header>
+
+  <main class="main">
+    <section class="panel">
+      <h2>Pre-match setup</h2>
+      <div class="body">
+        <div class="field">
+          <div class="wide"><label>Event name</label><input id="eventName" value="REBUILT Human Player Invitational" /></div>
+          <div><label>Mode</label><select id="eventMode"><option value="single">Single Match</option><option value="regional">Regional Mode</option><option value="test">FMS Test</option></select></div>
+          <div><label>Match type</label><select id="matchType"><option>Qualification</option><option>Practice</option><option>Playoff</option></select></div>
+          <div><label>Match #</label><input id="matchNumber" type="number" min="1" value="24" /></div>
+          <div><label>Total matches</label><input id="totalMatches" type="number" min="1" value="72" /></div>
+        </div>
+        <div class="teams">
+          <div class="teamcol red"><b>Red alliance</b><input id="r1" value="2976"/><input id="r2" value="4096"/><input id="r3" value="6329"/></div>
+          <div class="teamcol blue"><b>Blue alliance</b><input id="b1" value="1318"/><input id="b2" value="3476"/><input id="b3" value="5460"/></div>
+        </div>
+        <div class="field" style="margin-top:10px">
+          <div><label>Minor foul pts</label><input id="minorPts" type="number" value="5" min="0"/></div>
+          <div><label>Major foul pts</label><input id="majorPts" type="number" value="15" min="0"/></div>
+        </div>
+        <div style="display:flex;gap:7px;margin-top:11px;flex-wrap:wrap"><button class="btn green" onclick="applySetup()">Load Match</button><button class="btn ghost" onclick="saveEventPreset()">Save Preset</button><button class="btn ghost" onclick="nextMatch()">Next Match</button></div>
+        <div class="notice">Regional Mode v1 preserves event identity, match count and teams between matches. Full schedule generation, standings and playoff bracket are intentionally left for the next tournament-management pass.</div>
+      </div>
+
+      <h2>Match controls</h2>
+      <div class="body">
+        <div class="right-buttons"><button class="btn yellow" onclick="startMatch()">START MATCH</button><button class="btn red" onclick="abortMatch()">ABORT</button><button class="btn ghost" onclick="resetMatch()">RESET</button></div>
+        <div class="right-buttons"><button class="btn ghost" onclick="setScreen('PREVIEW')">Preview</button><button class="btn ghost" onclick="setScreen('REVIEW')">Under Review</button><button class="btn ghost" onclick="setScreen('RESULTS')">Show Results</button></div>
+        <div class="notice danger-note"><b>One-HUB game logic is locked to your prototype:</b> 20s Free For All → 20s Red → 20s Blue → 20s Red → 10s Blue → 30s Mayhem. Mayhem keeps the 60% bias toward the losing alliance.</div>
+      </div>
+    </section>
+
+    <section class="panel stage">
+      <div class="phasebar">
+        <div id="p-preview" class="phase-pill active">PREVIEW</div><div id="p-match" class="phase-pill">MATCH</div><div id="p-review" class="phase-pill">REVIEW</div><div id="p-results" class="phase-pill">RESULTS</div>
+      </div>
+      <div class="scorecard">
+        <div class="alliance red"><div class="name">Red Alliance</div><div id="redScore" class="bigscore">0</div><div class="breakdown"><span>Fuel <b id="redFuel">0</b></span><span>Penalty <b id="redPenalty">0</b></span></div></div>
+        <div class="core"><div id="matchLabel" class="match">Qualification 24 of 72</div><div id="timer" class="timer">2:00</div><div id="gamePhase" class="gamephase">PRE-MATCH READY</div><div id="hubMode" class="hubmode">HUB READY</div></div>
+        <div class="alliance blue"><div class="name">Blue Alliance</div><div id="blueScore" class="bigscore">0</div><div class="breakdown"><span>Fuel <b id="blueFuel">0</b></span><span>Penalty <b id="bluePenalty">0</b></span></div></div>
+      </div>
+      <div>
+        <div class="actions">
+          <button class="btn" onclick="manualFuel('RED',1)">RED +1 FUEL</button><button class="btn" onclick="manualFuel('RED',-1)">RED −1</button>
+          <button class="btn" onclick="manualFuel('BLUE',1)">BLUE +1 FUEL</button><button class="btn" onclick="manualFuel('BLUE',-1)">BLUE −1</button>
+        </div>
+        <div class="controlgrid">
+          <div class="mini"><h3>Match state</h3><div class="kv"><span>Screen</span><b id="screenState">PREVIEW</b></div><div class="kv"><span>Raw HUB events</span><b id="hubEvents">0</b></div><div class="kv"><span>Last chute</span><b id="lastChute">--</b></div><div class="kv"><span>Last score assignment</span><b id="lastAssignment">--</b></div></div>
+          <div class="mini"><h3>Score correction</h3><div class="adj"><span>Red penalty award</span><span class="val" id="rpMini">0</span><span><button class="btn sm" onclick="adjustPenalty('RED',-5)">−5</button> <button class="btn sm" onclick="adjustPenalty('RED',5)">+5</button></span></div><div class="adj"><span>Blue penalty award</span><span class="val" id="bpMini">0</span><span><button class="btn sm" onclick="adjustPenalty('BLUE',-5)">−5</button> <button class="btn sm" onclick="adjustPenalty('BLUE',5)">+5</button></span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Live operations</h2>
+      <div class="body">
+        <div class="statusgrid"><div class="stat"><strong id="hubAge">--</strong><span>Hub heartbeat age</span></div><div class="stat"><strong id="refCount">0</strong><span>Ref events</span></div><div class="stat"><strong id="stateSeq">0</strong><span>State packets</span></div><div class="stat"><strong id="matchId">Q24</strong><span>Match ID</span></div></div>
+      </div>
+      <h2>Event log</h2>
+      <div id="logBox" class="log"><div class="sys">[System] Backstage ready.</div></div>
+      <div class="body"><div class="right-buttons"><button class="btn ghost sm" onclick="undoLastScore()">Undo last score</button><button class="btn ghost sm" onclick="clearLog()">Clear log</button><button class="btn ghost sm" onclick="exportSnapshot()">Export snapshot</button></div></div>
+    </section>
+  </main>
+</div>
+<script>
+  let mqttClient=null, roomName='HUB1', timerInterval=null, heartbeatInterval=null;
+  let lastHubHeartbeat=0, refEventCount=0, stateSeq=0;
+  const seenRefIds=new Set();
+  const refActions=new Map();
+  let scoreHistory=[];
+
+  const state={
+    eventName:'REBUILT Human Player Invitational', eventMode:'single', matchType:'Qualification', matchNumber:24,totalMatches:72,
+    teams:{red:['2976','4096','6329'],blue:['1318','3476','5460']},
+    screen:'PREVIEW', running:false, matchTime:120, phase:'PRE-MATCH READY',
+    redFuel:0,blueFuel:0,redPenalty:0,bluePenalty:0, redCards:[],blueCards:[],
+    rawHubEvents:0,lastChute:null,lastAssignment:null, winner:null, underReview:false
+  };
+  const $=id=>document.getElementById(id); const clock=()=>new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const totalRed=()=>Math.max(0,state.redFuel+state.redPenalty), totalBlue=()=>Math.max(0,state.blueFuel+state.bluePenalty);
+
+  function loadPreset(){try{const p=JSON.parse(localStorage.getItem('rebuiltFmsPreset')||'null');if(!p)return; for(const [k,v] of Object.entries(p)){if($(k))$(k).value=v;}}catch(_){}}
+  function saveEventPreset(){const ids=['eventName','eventMode','matchType','matchNumber','totalMatches','r1','r2','r3','b1','b2','b3','minorPts','majorPts'];const p={};ids.forEach(id=>p[id]=$(id).value);localStorage.setItem('rebuiltFmsPreset',JSON.stringify(p));log('Event preset saved locally.','sys')}
+
+  function connectNetwork(){
+    roomName=$('roomInput').value.trim().toUpperCase()||'HUB1'; $('roomInput').value=roomName;
+    if(mqttClient){try{mqttClient.end(true)}catch(_){}}
+    mqttClient=mqtt.connect('wss://broker.hivemq.com:8884/mqtt',{reconnectPeriod:1500,connectTimeout:5000});
+    mqttClient.on('connect',()=>{
+      $('mqttStatus').textContent='MQTT ONLINE';$('mqttDot').className='dot on';log(`Connected to room ${roomName}.`,'sys');
+      mqttClient.subscribe(`frchub/${roomName}/events`); mqttClient.subscribe(`frchub/${roomName}/ref/events`); mqttClient.subscribe(`frchub/${roomName}/hub/telemetry`);
+      broadcastState(true); startHeartbeat(); syncHub();
+    });
+    mqttClient.on('message',(topic,msg)=>{try{const data=JSON.parse(msg.toString());routeMessage(topic,data)}catch(e){log(`Parse error: ${e.message}`,'err')}});
+    mqttClient.on('close',()=>{$('mqttStatus').textContent='MQTT OFFLINE';$('mqttDot').className='dot'});
+    mqttClient.on('error',e=>log(`MQTT error: ${e.message||e}`,'err'));
+  }
+  function routeMessage(topic,data){
+    if(topic.endsWith('/hub/telemetry') && data.type==='HUB_HEARTBEAT'){lastHubHeartbeat=Date.now();$('hubStatus').textContent='HUB ONLINE';$('hubDot').className='dot on';return;}
+    if(topic.endsWith('/events')){
+      if(data.type==='TRIGGER'){lastHubHeartbeat=Date.now();$('hubStatus').textContent='HUB ONLINE';$('hubDot').className='dot on';handleBallScored(data.chute);}
+      if(data.type==='PONG'){lastHubHeartbeat=Date.now();$('hubStatus').textContent='HUB ONLINE';$('hubDot').className='dot on';}
+      return;
+    }
+    if(topic.endsWith('/ref/events')) handleRefEvent(data);
+  }
+  function startHeartbeat(){clearInterval(heartbeatInterval);heartbeatInterval=setInterval(()=>{
+    if(mqttClient?.connected){mqttClient.publish(`frchub/${roomName}/commands`,JSON.stringify({type:'PING',timestamp:Date.now()}));broadcastState(false)}
+    const age=lastHubHeartbeat?Date.now()-lastHubHeartbeat:null;$('hubAge').textContent=age===null?'--':age<1000?'NOW':`${(age/1000).toFixed(1)}s`;
+    if(age!==null && age>3500){$('hubStatus').textContent='HUB WAITING';$('hubDot').className='dot warn'}
+  },1000)}
+
+  function applySetup(){
+    state.eventName=$('eventName').value.trim()||'REBUILT Event';state.eventMode=$('eventMode').value;state.matchType=$('matchType').value;state.matchNumber=Number($('matchNumber').value)||1;state.totalMatches=Number($('totalMatches').value)||1;
+    state.teams.red=[$('r1').value,$('r2').value,$('r3').value].map(v=>v.trim());state.teams.blue=[$('b1').value,$('b2').value,$('b3').value].map(v=>v.trim());
+    resetMatch(false);setScreen('PREVIEW');saveEventPreset();log(`Loaded ${matchText()}.`,'sys');render();broadcastState(true);
+  }
+  function nextMatch(){ $('matchNumber').value=(Number($('matchNumber').value)||1)+1; applySetup(); }
+  function matchText(){return `${state.matchType} ${state.matchNumber}${state.matchType==='Qualification'?` of ${state.totalMatches}`:''}`}
+  function matchShort(){return `${state.matchType==='Qualification'?'Q':state.matchType==='Practice'?'P':'M'}${state.matchNumber}`}
+
+  // IMPORTANT: This is the user's existing one-HUB phase logic, kept intact.
+  function phaseForTime(t){
+    if(t>100)return 'FREE FOR ALL (50/50)';
+    if(t>80)return 'RED SHIFT';
+    if(t>60)return 'BLUE SHIFT';
+    if(t>40)return 'RED SHIFT';
+    if(t>30)return 'BLUE SHIFT';
+    if(t>0)return 'MAYHEM (60% BOOST)';
+    return 'MATCH COMPLETE';
+  }
+  function startMatch(){
+    resetMatch(false);state.screen='MATCH';state.running=true;state.phase=phaseForTime(state.matchTime);log('Match started.','sys');render();syncHub();broadcastState(true);
+    timerInterval=setInterval(()=>{state.matchTime--;state.phase=phaseForTime(state.matchTime);if(state.matchTime<=0){state.matchTime=0;state.running=false;clearInterval(timerInterval);determineWinner();log('Match complete. Awaiting review/results.','sys')}render();syncHub();broadcastState(false)},1000);
+  }
+  function abortMatch(){if(timerInterval)clearInterval(timerInterval);state.running=false;state.phase='MATCH ABORTED';log('MATCH ABORTED by scorekeeper.','err');render();syncHub();broadcastState(true)}
+  function resetMatch(showPreview=true){if(timerInterval)clearInterval(timerInterval);state.running=false;state.matchTime=120;state.phase='PRE-MATCH READY';state.redFuel=state.blueFuel=state.redPenalty=state.bluePenalty=0;state.rawHubEvents=0;state.lastChute=null;state.lastAssignment=null;state.winner=null;state.underReview=false;scoreHistory=[];if(showPreview)state.screen='PREVIEW';render();syncHub();broadcastState(true)}
+
+  // Existing one-HUB assignment logic preserved, including 50/50 and 60% losing-alliance Mayhem bias.
+  function handleBallScored(chute){
+    state.rawHubEvents++;state.lastChute=String(chute);if(state.matchTime<=0||!state.running){log(`HUB trigger C${Number(chute)+1} ignored for score: match not active.`,'event');render();return}
+    let assigned='RED';
+    if(state.phase.startsWith('FREE')) assigned=Math.random()<0.5?'RED':'BLUE';
+    else if(state.phase.startsWith('RED')) assigned='RED';
+    else if(state.phase.startsWith('BLUE')) assigned='BLUE';
+    else if(state.phase.startsWith('MAYHEM')){
+      if(totalRed()===totalBlue()) assigned=Math.random()<0.5?'RED':'BLUE';
+      else {const losing=totalRed()<totalBlue()?'RED':'BLUE';const winning=totalRed()>totalBlue()?'RED':'BLUE';assigned=Math.random()<0.60?losing:winning;}
+    }
+    if(assigned==='RED')state.redFuel++;else state.blueFuel++;
+    state.lastAssignment=assigned;scoreHistory.push({kind:'fuel',alliance:assigned,delta:1,time:Date.now()});
+    log(`HUB C${Number(chute)+1} → ${assigned} +1 FUEL · ${state.phase}`,'event');render();syncHub();broadcastState(false);
+  }
+  function manualFuel(alliance,delta){const key=alliance==='RED'?'redFuel':'blueFuel';const actual=Math.max(-state[key],delta);state[key]+=actual;scoreHistory.push({kind:'fuel',alliance,delta:actual,time:Date.now(),manual:true});log(`Manual correction: ${alliance} ${actual>=0?'+':''}${actual} FUEL.`,'sys');render();syncHub();broadcastState(true)}
+  function adjustPenalty(alliance,delta){const key=alliance==='RED'?'redPenalty':'bluePenalty';const actual=Math.max(-state[key],delta);state[key]+=actual;scoreHistory.push({kind:'penalty',alliance,delta:actual,time:Date.now(),manual:true});log(`Manual penalty-award correction: ${alliance} ${actual>=0?'+':''}${actual}.`,'sys');render();syncHub();broadcastState(true)}
+  function undoLastScore(){const a=scoreHistory.pop();if(!a){log('Nothing to undo.','sys');return}const key=a.kind==='fuel'?(a.alliance==='RED'?'redFuel':'blueFuel'):(a.alliance==='RED'?'redPenalty':'bluePenalty');state[key]=Math.max(0,state[key]-a.delta);log(`Undo: ${a.alliance} ${a.kind} ${a.delta}.`,'sys');render();syncHub();broadcastState(true)}
+
+  function handleRefEvent(data){
+    if(!data||!data.type)return;if(data.id&&seenRefIds.has(data.id))return;if(data.id)seenRefIds.add(data.id);refEventCount++;$('refCount').textContent=refEventCount;$('refStatus').textContent='REF ONLINE';$('refDot').className='dot on';
+    if(data.type==='FOUL'){
+      const against=data.against==='BLUE'?'BLUE':'RED';const award=against==='RED'?'BLUE':'RED';const pts=data.severity==='MAJOR'?(Number($('majorPts').value)||15):(Number($('minorPts').value)||5);const key=award==='RED'?'redPenalty':'bluePenalty';state[key]+=pts;const hist={kind:'penalty',alliance:award,delta:pts,time:Date.now(),refId:data.id};scoreHistory.push(hist);if(data.id)refActions.set(data.id,{type:'FOUL',key,pts,hist});log(`REF ${data.ref||''}: ${data.severity} against ${against} → ${award} +${pts}.`,'ref');
+    } else if(data.type==='CARD'){
+      const key=data.against==='BLUE'?'blueCards':'redCards';const card={color:data.color||'YELLOW',ref:data.ref||'',id:data.id};state[key].push(card);if(data.id)refActions.set(data.id,{type:'CARD',key,card});log(`REF ${data.ref||''}: ${data.color||'YELLOW'} CARD to ${data.against}.`,'ref');
+    } else if(data.type==='REF_UNDO'){
+      const action=refActions.get(data.targetId);
+      if(action?.type==='FOUL'){state[action.key]=Math.max(0,state[action.key]-action.pts);const i=scoreHistory.indexOf(action.hist);if(i>=0)scoreHistory.splice(i,1);refActions.delete(data.targetId);log(`REF undo accepted: reversed ${action.pts} penalty points.`,'ref');}
+      else if(action?.type==='CARD'){const arr=state[action.key];const i=arr.indexOf(action.card);if(i>=0)arr.splice(i,1);refActions.delete(data.targetId);log(`REF undo accepted: card removed.`,'ref');}
+      else log(`REF undo ignored: action ${data.targetId||'unknown'} not found.`,'ref');
+    } else if(data.type==='UNDER_REVIEW'){setScreen('REVIEW');log(`Head Ref placed match under review.`,'ref')}
+    render();syncHub();broadcastState(true);
+  }
+
+  function determineWinner(){const r=totalRed(),b=totalBlue();state.winner=r===b?'TIE':r>b?'RED':'BLUE'}
+  function setScreen(screen){state.screen=screen;state.underReview=screen==='REVIEW';if(screen==='RESULTS')determineWinner();render();broadcastState(true)}
+  function syncHub(){if(!mqttClient?.connected)return;const m=Math.floor(state.matchTime/60),s=state.matchTime%60;const timeStr=`${m}:${String(s).padStart(2,'0')}`;mqttClient.publish(`frchub/${roomName}/commands`,JSON.stringify({type:'SYNC_TIME',timeStr,phase:state.phase}));mqttClient.publish(`frchub/${roomName}/commands`,JSON.stringify({type:'UPDATE_SCORES',red:totalRed(),blue:totalBlue()}))}
+  function publicState(){return {...state,redScore:totalRed(),blueScore:totalBlue(),matchLabel:matchText(),matchShort:matchShort(),timestamp:Date.now(),seq:++stateSeq}}
+  function broadcastState(retain){$('stateSeq').textContent=stateSeq+1;if(!mqttClient?.connected)return;mqttClient.publish(`frchub/${roomName}/fms/state`,JSON.stringify(publicState()),{retain:!!retain,qos:0})}
+  function render(){
+    $('redScore').textContent=totalRed();$('blueScore').textContent=totalBlue();$('redFuel').textContent=state.redFuel;$('blueFuel').textContent=state.blueFuel;$('redPenalty').textContent=state.redPenalty;$('bluePenalty').textContent=state.bluePenalty;$('rpMini').textContent=state.redPenalty;$('bpMini').textContent=state.bluePenalty;
+    const m=Math.floor(state.matchTime/60),s=state.matchTime%60;$('timer').textContent=`${m}:${String(s).padStart(2,'0')}`;$('gamePhase').textContent=state.phase;$('matchLabel').textContent=matchText();$('matchId').textContent=matchShort();$('hubEvents').textContent=state.rawHubEvents;$('lastChute').textContent=state.lastChute===null?'--':`C${Number(state.lastChute)+1}`;$('lastAssignment').textContent=state.lastAssignment||'--';$('screenState').textContent=state.screen;
+    $('hubMode').textContent=state.phase.startsWith('FREE')?'HUB 50 / 50':state.phase.startsWith('RED')?'HUB → RED':state.phase.startsWith('BLUE')?'HUB → BLUE':state.phase.startsWith('MAYHEM')?'HUB MAYHEM 60%':'HUB READY';
+    ['preview','match','review','results'].forEach(x=>$(`p-${x}`).classList.toggle('active',state.screen===x.toUpperCase()));
+  }
+  function exportSnapshot(){const blob=new Blob([JSON.stringify(publicState(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${matchShort()}-snapshot.json`;a.click();URL.revokeObjectURL(a.href)}
+  function clearLog(){$('logBox').innerHTML=''}
+  function log(msg,cls=''){const d=document.createElement('div');d.className=cls;d.textContent=`[${clock()}] ${msg}`;$('logBox').appendChild(d);$('logBox').scrollTop=$('logBox').scrollHeight}
+
+  loadPreset();
+  const launchRoom = new URLSearchParams(location.search).get('room');
+  if (launchRoom) $('roomInput').value = launchRoom.trim().toUpperCase();
+  applySetup();connectNetwork();
+</script>
+</body>
+</html>
