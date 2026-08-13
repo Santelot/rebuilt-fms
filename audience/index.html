@@ -14,7 +14,7 @@
       --yellow:#ffe600;--white:#fff;--black:#0a0a0a;
       --live-h:16vh;
       --results-top:6.7vh;
-      --results-footer:10.4vh;
+      --results-footer:10.4vh;--screenTransition:280ms;
     }
     *{box-sizing:border-box}
     html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080b0f;font-family:Arial,Helvetica,sans-serif;color:#111}
@@ -25,7 +25,7 @@
     .camera{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#121821}
     .camera.contain{object-fit:contain;background:#000}
     .camera.empty{background:radial-gradient(circle at 50% 45%,#263440 0,#10171f 42%,#090d12 78%)}
-    .screen{position:absolute;inset:0;display:none;overflow:hidden}.screen.active{display:block}
+    .screen{position:absolute;inset:0;display:block;overflow:hidden;opacity:0;visibility:hidden;pointer-events:none;transition:opacity var(--screenTransition) ease,visibility 0s linear var(--screenTransition)}.screen.active{opacity:1;visibility:visible;pointer-events:auto;transition:opacity var(--screenTransition) ease,visibility 0s linear 0s}
 
     /* =========================================================
        PREVIEW — intentionally kept visually unchanged from v2.
@@ -48,7 +48,7 @@
     .avatar::before{content:'FRC';font-size:8px;letter-spacing:-.05em}
     .preview-team-name{display:flex;align-items:center;padding:0 7px;font-size:18px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .rank-box{background:#111b23;color:#fff;display:grid;place-items:center;font-size:16px;font-weight:900}
-    .card-chip{background:var(--yellow);border:1px solid #111;padding:2px 12px;color:#111;font-size:11px;line-height:16px;font-weight:1000}
+    .card-chip{background:var(--yellow);border:1px solid #111;padding:2px 12px;color:#111;font-size:11px;line-height:16px;font-weight:1000}.card-chip.red-card{background:#e21f32;color:#fff;border-color:#6c0a15}.card-chip.stack{padding-inline:8px}
     .vs{width:62px;height:52px;background:#fff;display:grid;place-items:center;font-size:33px;font-weight:1000;box-shadow:0 2px 4px rgba(0,0,0,.3);justify-self:center}
     .preview-footer{position:absolute;bottom:0;left:0;right:0;height:54px;background:#fff;display:grid;grid-template-columns:140px 1fr;align-items:center;border-top:1px solid #aaa}
     .footer-frc{height:54px;background:#101d26;padding:5px 12px;display:flex;align-items:center;justify-content:center}.footer-frc img{max-width:100%;max-height:100%}
@@ -69,7 +69,7 @@
     .live-alliance.red{background:var(--red-dark)}.live-alliance.blue{background:var(--blue-dark)}
     .live-team-row{height:44%;display:grid;grid-template-columns:repeat(3,1fr);align-items:center;padding:0 2.1%;gap:1.8%;font-weight:800;font-size:clamp(11px,1.05vw,19px)}
     .live-team{height:68%;display:flex;align-items:center;justify-content:center;gap:.42em;background:rgba(0,0,0,.08);white-space:nowrap;position:relative}
-    .live-team.carded{outline:2px solid var(--yellow);outline-offset:-2px}
+    .live-team.carded{outline:2px solid var(--yellow);outline-offset:-2px}.live-team.red-carded{outline-color:#ff3147;background:rgba(150,0,20,.22)}
     .live-avatar{width:1.05em;height:1.05em;background:#fff;color:#15212c;border-radius:1px;display:grid;place-items:center;font-size:.48em;font-weight:1000}
     .live-bottom{height:56%;display:flex;align-items:center;gap:2.4%;padding:0 6.5%}
     .live-alliance.blue .live-bottom{justify-content:flex-end}
@@ -81,8 +81,8 @@
     .fuel-dots i{position:absolute;width:25%;aspect-ratio:1;border-radius:50%;background:currentColor}
     .fuel-dots i:nth-child(1){left:38%;top:0}.fuel-dots i:nth-child(2){left:19%;top:26%}.fuel-dots i:nth-child(3){left:57%;top:26%}.fuel-dots i:nth-child(4){left:0;top:53%}.fuel-dots i:nth-child(5){left:38%;top:53%}.fuel-dots i:nth-child(6){left:76%;top:53%}
     .live-alliance.red .progress-icon{color:var(--red)}.live-alliance.blue .progress-icon{color:var(--blue)}
-    .hub-active{height:64%;aspect-ratio:1;background:var(--yellow);border:2px solid #111;display:grid;place-items:center;flex:0 0 auto}
-    .hub-active.off{visibility:hidden}
+    .hub-active{height:64%;aspect-ratio:1;background:var(--yellow);border:2px solid #111;display:grid;place-items:center;flex:0 0 auto;opacity:1;transform:scale(1);transition:opacity .22s ease,transform .22s ease,visibility 0s linear 0s}
+    .hub-active.off{opacity:0;transform:scale(.84);visibility:hidden;transition:opacity .22s ease,transform .22s ease,visibility 0s linear .22s}
     .arrow-shape{width:56%;height:18%;background:#111;position:relative}
     .arrow-shape::after{content:'';position:absolute;right:-55%;top:50%;transform:translateY(-50%);border-top:.38em solid transparent;border-bottom:.38em solid transparent;border-left:.56em solid #111}
     .arrow-shape.left{transform:rotate(180deg)}
@@ -93,8 +93,8 @@
     .shift-data{display:grid;grid-template-columns:1fr 1fr;align-items:center;font-size:clamp(12px,1.25vw,23px);font-weight:900}
     .shift-data span:first-child{border-right:1px solid #aaa;height:100%;display:grid;place-items:center}
     .match-time{display:grid;place-items:center;font-size:clamp(33px,3.4vw,64px);font-weight:1000;line-height:1}
-    .review-panel{position:absolute;inset:0;background:var(--yellow);display:none;align-items:center;justify-content:center;gap:8%;font-size:clamp(12px,1.15vw,22px);font-weight:1000}
-    .live-timer.reviewing .shift-data,.live-timer.reviewing .match-time{visibility:hidden}.live-timer.reviewing .review-panel{display:flex}
+    .review-panel{position:absolute;inset:0;background:var(--yellow);display:flex;align-items:center;justify-content:center;gap:8%;font-size:clamp(12px,1.15vw,22px);font-weight:1000;opacity:0;visibility:hidden;transition:opacity .24s ease,visibility 0s linear .24s}
+    .shift-data,.match-time{transition:opacity .2s ease}.live-timer.reviewing .shift-data,.live-timer.reviewing .match-time{opacity:0}.live-timer.reviewing .review-panel{opacity:1;visibility:visible;transition:opacity .24s ease,visibility 0s linear 0s}
     .whistle-icon{width:28%;max-width:42px;height:auto}
     .whistle-icon path,.whistle-icon circle{fill:#111}
 
@@ -108,6 +108,7 @@
     .count-number.bump{animation:countBump .72s cubic-bezier(.2,.75,.22,1) both}
     .count-caption{position:absolute;top:calc(50% + min(15vw,160px));color:#fff;font-size:clamp(13px,1.2vw,22px);font-weight:900;letter-spacing:.18em;text-transform:uppercase;text-shadow:0 2px 4px #000}
     @keyframes countBump{0%{transform:scale(.76);opacity:0}28%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:1}}
+    .value-pulse{animation:valuePulse .28s ease both}@keyframes valuePulse{0%{transform:scale(1)}45%{transform:scale(1.075)}100%{transform:scale(1)}}
 
     /* =========================================================
        MATCH RESULTS — qualification layout rebuilt against the
@@ -124,13 +125,12 @@
     .result-score{color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900}
     .result-score.red{background:var(--red)}.result-score.blue{background:var(--blue)}
     .result-score span{font-size:clamp(11px,1.15vw,21px);margin-bottom:1.5%}.result-score b{font-size:clamp(48px,5.4vw,100px);line-height:.9}
-    .breakdown{height:43%;font-weight:900}
-    .break-section{height:15%;display:grid;place-items:center;background:#ccc;font-size:clamp(10px,1vw,18px)}
-    .break-row{height:21.25%;display:grid;grid-template-columns:1fr 24% 1fr;align-items:center;background:#f7f7f7;font-size:clamp(11px,1.35vw,25px)}
+    .breakdown{height:42%;font-weight:900;display:grid;grid-template-rows:18% 25% 18% 25% 14%}
+    .break-section{display:grid;place-items:center;background:#ccc;font-size:clamp(10px,1vw,18px)}
+    .break-row{display:grid;grid-template-columns:1fr 24% 1fr;align-items:center;background:#f7f7f7;font-size:clamp(11px,1.35vw,25px)}
     .break-row.white{background:#fff}.break-row .left{text-align:right;padding-right:7%}.break-row .right{text-align:left;padding-left:7%}.break-row .label{text-align:center;font-size:clamp(10px,1vw,18px)}
-    .penalty-row{height:18%;background:#d0d0d0}
-    .qr-block{position:absolute;left:50%;bottom:4.4%;transform:translateX(-50%);height:19.5%;aspect-ratio:2.15/1;background:#fff;border:1px solid #aaa;display:grid;grid-template-columns:auto 1fr;align-items:center}
-    .qr-svg{height:100%;aspect-ratio:1;padding:4%;background:#fff}.qr-label{font-size:clamp(8px,.8vw,15px);font-weight:900;line-height:1.05;padding-right:8%}
+    .penalty-row{background:#d0d0d0}
+    .result-detail-note{position:absolute;left:50%;bottom:5%;transform:translateX(-50%);font-size:clamp(8px,.7vw,13px);font-weight:800;color:#777;letter-spacing:.03em;white-space:nowrap}
     .winner-slot{position:absolute;left:0;right:0;top:0;height:27.3%;display:none;align-items:center;justify-content:center;gap:5%;background:var(--yellow);font-size:clamp(23px,3.1vw,58px);font-weight:1000;color:#111;z-index:2;transform:translateX(0)}
     .winner-slot.show{display:flex}.winner-slot.tie{background:#d7d7d7}
     .winner-slot.redWinner{transform:translateX(-105%)}.winner-slot.blueWinner{transform:translateX(105%)}
@@ -146,7 +146,7 @@
     .result-team-main{display:flex;align-items:center;gap:2.2%;padding:0 2%;color:#fff;font-size:clamp(12px,1.35vw,25px);font-weight:900;min-width:0}
     .result-side.red .result-team-main{background:var(--red)}.result-side.blue .result-team-main{background:var(--blue)}
     .result-avatar{height:70%;aspect-ratio:1;background:#eee;color:#17212a;border:1px solid rgba(0,0,0,.2);display:grid;place-items:center;font-size:.45em;font-weight:1000}
-    .result-card{margin-left:auto;background:var(--yellow);color:#111;border:1px solid #111;padding:.1em .55em;font-size:.58em}
+    .result-card{margin-left:auto;background:var(--yellow);color:#111;border:1px solid #111;padding:.1em .55em;font-size:.58em}.result-card.red-card{background:#e21f32;color:#fff;border-color:#6c0a15}
     .result-rank{background:#111b23;color:#fff;display:flex;align-items:center;justify-content:center;gap:.15em;font-size:clamp(11px,1.15vw,22px);font-weight:900}
     .rank-points{position:absolute;left:0;right:0;bottom:7.2%;color:#fff;text-align:center}
     .rank-title{font-weight:900;font-size:clamp(12px,1.2vw,22px);margin-bottom:1.5%}
@@ -162,9 +162,8 @@
     .results.pre-reveal .result-score b,
     .results.pre-reveal .breakdown,
     .results.pre-reveal .result-teams,
-    .results.pre-reveal .rank-points,
-    .results.pre-reveal .qr-block{opacity:0}
-    .results.structure .result-teams,.results.structure .rank-points,.results.structure .qr-block{animation:softIn .65s ease forwards}
+    .results.pre-reveal .rank-points{opacity:0}
+    .results.structure .result-teams,.results.structure .rank-points{animation:softIn .65s ease forwards}
     .results.structure .breakdown{animation:softIn .65s .18s ease forwards}
     .results.score-reveal .result-score b{animation:scoreIn .55s ease forwards}
     @keyframes softIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -303,16 +302,11 @@
         <div class="breakdown">
           <div class="break-section">AUTO</div>
           <div class="break-row white"><span id="redAutoFuelResult" class="left">0</span><span class="label">FUEL</span><span id="blueAutoFuelResult" class="right">0</span></div>
-          <div class="break-row white"><span class="left">0</span><span class="label">TOWER</span><span class="right">0</span></div>
           <div class="break-section">TELEOP</div>
           <div class="break-row white"><span id="redFuelResult" class="left">0</span><span class="label">FUEL</span><span id="blueFuelResult" class="right">0</span></div>
-          <div class="break-row white"><span class="left">0</span><span class="label">TOWER</span><span class="right">0</span></div>
           <div class="break-row penalty-row"><span id="redPenaltyResult" class="left">0</span><span class="label">PENALTY</span><span id="bluePenaltyResult" class="right">0</span></div>
         </div>
-        <div class="qr-block">
-          <svg id="qrSvg" class="qr-svg" viewBox="0 0 29 29" shape-rendering="crispEdges" aria-hidden="true"></svg>
-          <div class="qr-label">Scan for<br>detailed<br><span id="qrMatch">match</span><br>results</div>
-        </div>
+        <div class="result-detail-note">Detailed scoring available in FMS Backstage</div>
       </div>
 
       <div class="result-side blue">
@@ -406,13 +400,27 @@
   }
 
   function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+  function setAnimatedText(id,value){
+    const el=$(id),next=String(value);if(!el)return;if(el.textContent!==next){el.textContent=next;el.classList.remove('value-pulse');void el.offsetWidth;el.classList.add('value-pulse')}
+  }
   function teamName(n,s=lastState){return n?(s?.teamMeta?.[n]?.name||`Team ${n}`):'Open Station'}
   function rankFor(n,s=lastState){const r=s?.teamRanks?.[n];return Number.isFinite(Number(r))&&Number(r)>0?Number(r):'—'}
   function moveFor(n,s=lastState){const m=Number(s?.rankMoves?.[n]||0);return m>0?'↑':m<0?'↓':'—'}
-  function previewRows(teams,alliance,cards,s=lastState){return (teams||[]).map((t,i)=>`<div class="preview-team ${alliance}"><div class="preview-team-main"><div class="preview-numberline"><span class="avatar"></span><span>${escapeHtml(t||'—')}</span>${i===0&&cards?.length?'<span class="card-chip">CARD</span>':''}</div><div class="preview-team-name">${escapeHtml(teamName(t,s))}</div></div><div class="rank-box">${rankFor(t,s)}</div></div>`).join('')}
-  function liveTeams(teams,cards){return (teams||[]).map((t,i)=>`<span class="live-team ${i===0&&cards?.length?'carded':''}"><i class="live-avatar">F</i>${escapeHtml(t||'—')}</span>`).join('')}
-  function resultRows(teams,alliance,cards,s=lastState){
-    return (teams||[]).map((t,i)=>`<div class="result-team"><div class="result-team-main"><span class="result-avatar">FRC</span><span>${escapeHtml(t||'—')}</span>${i===0&&cards?.length?'<span class="result-card">CARD</span>':''}</div><div class="result-rank"><span>${rankFor(t,s)}</span><span>${moveFor(t,s)}</span></div></div>`).join('')
+  function cardInfo(teamId,s=lastState){
+    const direct=s?.teamCards?.[teamId];
+    if(direct)return{yellow:Math.max(0,Number(direct.yellow)||0),red:!!direct.red};
+    const legacy=[...(s?.redCards||[]),...(s?.blueCards||[])].find(c=>typeof c==='object'&&c?.teamId===teamId);
+    return legacy?{yellow:Math.max(0,Number(legacy.yellow)||0),red:!!legacy.red}:{yellow:0,red:false}
+  }
+  function cardChip(teamId,s=lastState,kind='preview'){
+    const c=cardInfo(teamId,s);if(!c.yellow&&!c.red)return'';
+    const cls=c.red?'red-card':'',label=c.red?'RED CARD':c.yellow>1?`CARD ×${c.yellow}`:'CARD';
+    return `<span class="${kind==='result'?'result-card':'card-chip'} ${cls}">${label}</span>`
+  }
+  function previewRows(teams,alliance,s=lastState){return (teams||[]).map(t=>`<div class="preview-team ${alliance}"><div class="preview-team-main"><div class="preview-numberline"><span class="avatar"></span><span>${escapeHtml(t||'—')}</span>${cardChip(t,s)}</div><div class="preview-team-name">${escapeHtml(teamName(t,s))}</div></div><div class="rank-box">${rankFor(t,s)}</div></div>`).join('')}
+  function liveTeams(teams,s=lastState){return (teams||[]).map(t=>{const c=cardInfo(t,s),cls=c.red?'red-carded':c.yellow?'carded':'';return `<span class="live-team ${cls}"><i class="live-avatar">F</i>${escapeHtml(t||'—')}</span>`}).join('')}
+  function resultRows(teams,alliance,s=lastState){
+    return (teams||[]).map(t=>`<div class="result-team"><div class="result-team-main"><span class="result-avatar">FRC</span><span>${escapeHtml(t||'—')}</span>${cardChip(t,s,'result')}</div><div class="result-rank"><span>${rankFor(t,s)}</span><span>${moveFor(t,s)}</span></div></div>`).join('')
   }
 
   function thresholds(s=lastState){let e=Math.max(1,Number(s?.balance?.energizedThreshold)||Number($('energizedInput').value)||100),sp=Math.max(e+1,Number(s?.balance?.superchargedThreshold)||Number($('superchargedInput').value)||360);return{energized:e,supercharged:sp}}
@@ -448,23 +456,24 @@
 
   function render(s){
     const previousScreen=lastScreen,previousPhase=lastPhase,previousCountdown=lastCountdown,previousTime=lastMatchTime;
-    const teams=s.teams||{red:[],blue:[]},redCards=s.redCards||[],blueCards=s.blueCards||[];
+    const teams=s.teams||{red:[],blue:[]};
     $('previewMatchLabel').textContent=s.matchLabel||'REBUILT Match';
     $('liveMatchLabel').textContent=s.matchLabel||'REBUILT Match';
     $('resultsMatchLabel').textContent=s.matchLabel||'REBUILT Match';
     $('previewEvent').textContent=s.eventName||'REBUILT Event';
 
     // Preview rendering remains the same.
-    $('redPreview').innerHTML=previewRows(teams.red,'red',redCards,s);
-    $('bluePreview').innerHTML=previewRows(teams.blue,'blue',blueCards,s);
+    $('redPreview').innerHTML=previewRows(teams.red,'red',s);
+    $('bluePreview').innerHTML=previewRows(teams.blue,'blue',s);
 
-    $('redTeamNumbers').innerHTML=liveTeams(teams.red,redCards);
-    $('blueTeamNumbers').innerHTML=liveTeams(teams.blue,blueCards);
-    $('redResultTeams').innerHTML=resultRows(teams.red,'red',redCards,s);
-    $('blueResultTeams').innerHTML=resultRows(teams.blue,'blue',blueCards,s);
+    $('redTeamNumbers').innerHTML=liveTeams(teams.red,s);
+    $('blueTeamNumbers').innerHTML=liveTeams(teams.blue,s);
+    $('redResultTeams').innerHTML=resultRows(teams.red,'red',s);
+    $('blueResultTeams').innerHTML=resultRows(teams.blue,'blue',s);
 
+    const transitionMs=Math.max(80,Number(s?.broadcast?.screenTransitionMs)||280);document.documentElement.style.setProperty('--screenTransition',`${transitionMs}ms`);
     const redScore=Number(s.redScore??0),blueScore=Number(s.blueScore??0),redFuel=Number(s.redFuel??0),blueFuel=Number(s.blueFuel??0),redPenalty=Number(s.redPenalty??0),bluePenalty=Number(s.bluePenalty??0);
-    $('redLiveScore').textContent=redScore;$('blueLiveScore').textContent=blueScore;
+    setAnimatedText('redLiveScore',redScore);setAnimatedText('blueLiveScore',blueScore);
     updateProgress('red',redFuel);updateProgress('blue',blueFuel);
 
     const t=Math.max(0,Number(s.displayTime??s.matchTime??20)),m=Math.floor(t/60),sec=t%60;
@@ -477,8 +486,6 @@
     $('redFuelResult').textContent=Number(s.redTeleopFuelPoints??Math.max(0,Number(s.redFuelPoints??redFuel)-Number(s.redAutoFuelPoints??0)));$('blueFuelResult').textContent=Number(s.blueTeleopFuelPoints??Math.max(0,Number(s.blueFuelPoints??blueFuel)-Number(s.blueAutoFuelPoints??0)));
     $('redPenaltyResult').textContent=redPenalty;$('bluePenaltyResult').textContent=bluePenalty;
     $('redRp').innerHTML=rpIcons('RED',s);$('blueRp').innerHTML=rpIcons('BLUE',s);
-    $('qrMatch').textContent=s.matchShort||s.matchLabel||'match';
-    drawPseudoQr(`${roomName}|${s.matchLabel||''}|${redScore}|${blueScore}`);
 
     const target=s.screen==='RESULTS'?'resultsScreen':s.screen==='PREVIEW'?'previewScreen':'matchScreen';
     ['previewScreen','matchScreen','resultsScreen'].forEach(id=>$(id).classList.toggle('active',id===target));
@@ -548,17 +555,7 @@
     requestAnimationFrame(frame)
   }
 
-  function drawPseudoQr(seed){
-    const svg=$('qrSvg');svg.innerHTML='';
-    let h=2166136261;for(const ch of seed){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}
-    const n=29,mods=Array.from({length:n},()=>Array(n).fill(false));
-    function finder(x,y){for(let yy=0;yy<7;yy++)for(let xx=0;xx<7;xx++){const edge=xx===0||yy===0||xx===6||yy===6,inner=xx>=2&&xx<=4&&yy>=2&&yy<=4;mods[y+yy][x+xx]=edge||inner}}
-    finder(0,0);finder(n-7,0);finder(0,n-7);
-    function reserved(x,y){return (x<8&&y<8)||(x>=n-8&&y<8)||(x<8&&y>=n-8)}
-    for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(!reserved(x,y)){h^=h<<13;h^=h>>>17;h^=h<<5;mods[y][x]=((h>>>0)&1)===1}
-    let d='';for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(mods[y][x])d+=`M${x} ${y}h1v1h-1z`;
-    svg.innerHTML=`<rect width="29" height="29" fill="white"/><path d="${d}" fill="#050505"/>`;
-  }
+
 
   /* ---------------- Audio ---------------- */
   function preloadCueAudio(){Object.entries(cueUrls).forEach(([name,url])=>{const a=new Audio(url);a.preload='auto';a.volume=1;cueAudio[name]=a;try{a.load()}catch(_){}})}
