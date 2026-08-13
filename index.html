@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1118" />
+  <title>REBUILT FMS · Station Launcher</title>
+  <style>
+    :root{
+      --bg:#081018;--panel:#101a25;--panel2:#142231;--line:#26384b;--text:#f4f8fb;--muted:#8ea1b5;
+      --red:#ed1c24;--blue:#0878be;--yellow:#ffe600;--green:#17d887;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% -20%,#17304a 0,#0c1722 35%,var(--bg) 70%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+    .shell{width:min(1040px,100%)}
+    .eyebrow{font-size:12px;font-weight:800;letter-spacing:.18em;color:#9eb3c8;text-transform:uppercase;margin-bottom:10px}
+    h1{font-size:clamp(34px,5vw,64px);line-height:.95;margin:0;letter-spacing:-.05em}
+    .sub{margin:18px 0 26px;color:var(--muted);font-size:16px;max-width:700px;line-height:1.55}
+    .roombar{display:flex;gap:12px;align-items:center;background:rgba(16,26,37,.92);border:1px solid var(--line);padding:14px;border-radius:16px;margin-bottom:16px;box-shadow:0 18px 50px rgba(0,0,0,.24)}
+    .roombar label{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:800;white-space:nowrap}
+    .roombar input{flex:1;min-width:0;border:1px solid #344b61;background:#09131d;color:#fff;font-size:17px;font-weight:800;letter-spacing:.08em;border-radius:10px;padding:12px 14px;outline:none;text-transform:uppercase}
+    .roombar input:focus{border-color:#6ea9dd;box-shadow:0 0 0 3px rgba(110,169,221,.15)}
+    .status{font-size:12px;color:var(--green);font-weight:700;white-space:nowrap}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .card{position:relative;overflow:hidden;min-height:220px;padding:24px;border-radius:18px;border:1px solid var(--line);background:linear-gradient(145deg,rgba(20,34,49,.98),rgba(12,21,31,.98));box-shadow:0 18px 50px rgba(0,0,0,.22);display:flex;flex-direction:column;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+    .card:hover{transform:translateY(-3px);border-color:#48617a;box-shadow:0 24px 60px rgba(0,0,0,.32)}
+    .card::after{content:"";position:absolute;inset:auto -50px -80px auto;width:180px;height:180px;border-radius:50%;filter:blur(6px);opacity:.12;background:var(--accent)}
+    .card .role{font-size:11px;color:var(--muted);font-weight:850;letter-spacing:.16em;text-transform:uppercase}
+    .card h2{font-size:27px;margin:8px 0 8px;letter-spacing:-.03em}
+    .card p{margin:0;color:#aab9c8;line-height:1.45;max-width:40ch;font-size:14px}
+    .launch{margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:22px}
+    .launch span{font-size:12px;color:#70849a}
+    .btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#071018;background:var(--accent);font-weight:900;padding:11px 15px;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+    .hub{--accent:var(--green)} .fms{--accent:var(--yellow)} .aud{--accent:#f6f8fb} .ref{--accent:#ff5d63}
+    .footer{margin-top:18px;display:flex;justify-content:space-between;gap:20px;color:#63788d;font-size:12px;line-height:1.45}
+    .footer strong{color:#8ea1b5}
+    @media(max-width:720px){body{padding:18px}.grid{grid-template-columns:1fr}.roombar{align-items:stretch;flex-direction:column}.status{display:none}.card{min-height:195px}.footer{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="eyebrow">REBUILT · FRC Human Player Match System</div>
+    <h1>Station Launcher</h1>
+    <p class="sub">Choose what this device will do. Keep the same Room ID on every station and the HUB, FMS, audience display, and referee console will join the same match network.</p>
+
+    <section class="roombar" aria-label="Match room">
+      <label for="room">Room ID</label>
+      <input id="room" value="HUB1" maxlength="32" autocomplete="off" spellcheck="false" />
+      <div class="status">● Ready to launch</div>
+    </section>
+
+    <section class="grid">
+      <article class="card hub">
+        <div class="role">Hardware station</div>
+        <h2>HUB Console</h2>
+        <p>Arduino connection, live chute telemetry, calibration tools, trigger diagnostics, and hardware health.</p>
+        <div class="launch"><span>Use on the HUB laptop</span><a class="btn" data-tool="hub/" href="hub/">Open HUB →</a></div>
+      </article>
+
+      <article class="card fms">
+        <div class="role">Control station</div>
+        <h2>FMS Backstage</h2>
+        <p>Pre-match setup, match control, scores, event state, review/results flow, and referee event handling.</p>
+        <div class="launch"><span>Use at scoring</span><a class="btn" data-tool="fms/" href="fms/">Open FMS →</a></div>
+      </article>
+
+      <article class="card aud">
+        <div class="role">Public display</div>
+        <h2>Audience Display</h2>
+        <p>Webcam feed, live scoreboard, match preview, review state, and match results for projector or OBS.</p>
+        <div class="launch"><span>Use on stream / projector</span><a class="btn" data-tool="audience/" href="audience/">Open Display →</a></div>
+      </article>
+
+      <article class="card ref">
+        <div class="role">Field station</div>
+        <h2>Referee Console</h2>
+        <p>Mobile-first foul, card, review, and undo controls synchronized directly with FMS Backstage.</p>
+        <div class="launch"><span>Use on phone or tablet</span><a class="btn" data-tool="ref/" href="ref/">Open Ref →</a></div>
+      </article>
+    </section>
+
+    <div class="footer">
+      <div><strong>Tip:</strong> bookmark this launcher on every device. The selected Room ID is passed into the tool automatically.</div>
+      <div>GitHub Pages ready · static HTML · no build step</div>
+    </div>
+  </main>
+
+  <script>
+    const room = document.getElementById('room');
+    const saved = localStorage.getItem('rebuiltLauncherRoom');
+    if (saved) room.value = saved;
+
+    function cleanRoom(value){
+      return (value || 'HUB1').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,32) || 'HUB1';
+    }
+    function refreshLinks(){
+      const value = cleanRoom(room.value);
+      document.querySelectorAll('[data-tool]').forEach(link => {
+        link.href = `${link.dataset.tool}?room=${encodeURIComponent(value)}`;
+      });
+    }
+    room.addEventListener('input', refreshLinks);
+    room.addEventListener('change', () => {
+      room.value = cleanRoom(room.value);
+      localStorage.setItem('rebuiltLauncherRoom', room.value);
+      refreshLinks();
+    });
+    document.querySelectorAll('[data-tool]').forEach(link => link.addEventListener('click', () => {
+      room.value = cleanRoom(room.value);
+      localStorage.setItem('rebuiltLauncherRoom', room.value);
+      refreshLinks();
+    }));
+    refreshLinks();
+  </script>
+</body>
+</html>
