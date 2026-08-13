@@ -3,242 +3,475 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#081018" />
   <title>REBUILT FMS Backstage</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
-    :root{--bg:#090d12;--panel:#121923;--panel2:#0e151e;--line:#273548;--text:#f4f7fb;--muted:#8fa1b8;--red:#d8192f;--blue:#0872b8;--yellow:#ffe000;--green:#2dd881;--orange:#ff9f43}
-    *{box-sizing:border-box} body{margin:0;background:#080c11;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}button,input,select{font:inherit}
-    .shell{max-width:1600px;margin:auto;padding:14px}.top{display:flex;gap:12px;align-items:center;background:#0b121a;border:1px solid #1f2b3b;border-radius:12px;padding:12px 14px;position:sticky;top:0;z-index:4;box-shadow:0 15px 40px rgba(0,0,0,.35)}
-    .brand{font-weight:950;letter-spacing:-.03em;font-size:19px}.brand small{display:block;font-size:9px;color:var(--muted);letter-spacing:.12em;margin-top:3px}.spacer{flex:1}.chip{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#0f1822;border-radius:999px;padding:7px 10px;font-size:11px;color:#cbd7e6}.dot{width:8px;height:8px;border-radius:50%;background:#64748b}.dot.on{background:var(--green);box-shadow:0 0 12px rgba(45,216,129,.5)}.dot.warn{background:var(--yellow)}
-    input,select{background:#0b121a;border:1px solid #2c3b50;color:#fff;padding:8px 9px;border-radius:7px;outline:none}.top input{width:82px;text-transform:uppercase}.btn{border:0;border-radius:8px;padding:9px 13px;font-weight:900;cursor:pointer;color:#fff;background:#29374b}.btn:hover{filter:brightness(1.1)}.btn.blue{background:#176fd1}.btn.green{background:var(--green);color:#07120c}.btn.yellow{background:var(--yellow);color:#111}.btn.red{background:#a61f32}.btn.ghost{background:transparent;border:1px solid #34465f}.btn.sm{font-size:11px;padding:7px 9px}
-    .main{display:grid;grid-template-columns:330px 1fr 390px;gap:12px;margin-top:12px}.panel{background:linear-gradient(180deg,#111923,#0d141d);border:1px solid #223044;border-radius:12px;overflow:hidden}.panel h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#b8c6d8;margin:0;padding:12px 14px;border-bottom:1px solid #223044}.body{padding:13px}.field{display:grid;grid-template-columns:1fr 1fr;gap:9px}.field label{font-size:10px;color:var(--muted);display:block;margin-bottom:5px}.field input,.field select{width:100%}.field .wide{grid-column:1/-1}
-    .teams{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.teamcol{border-radius:9px;padding:10px}.teamcol.red{background:rgba(216,25,47,.12);border:1px solid rgba(216,25,47,.32)}.teamcol.blue{background:rgba(8,114,184,.13);border:1px solid rgba(8,114,184,.35)}.teamcol b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.09em;margin-bottom:7px}.teamcol input{width:100%;margin-top:6px}
-    .stage{display:grid;grid-template-rows:auto auto 1fr;min-height:740px}.phasebar{display:flex;gap:6px;padding:10px;background:#0a1017;border-bottom:1px solid #223044;overflow:auto}.phase-pill{flex:1;min-width:90px;text-align:center;border:1px solid #2b3a4f;color:#8191a7;border-radius:6px;padding:7px 5px;font-size:9px;font-weight:900;letter-spacing:.08em}.phase-pill.active{color:#101010;background:var(--yellow);border-color:var(--yellow)}
-    .scorecard{display:grid;grid-template-columns:1fr 250px 1fr;min-height:230px}.alliance{padding:20px;display:flex;flex-direction:column;justify-content:center}.alliance.red{background:linear-gradient(90deg,#8d0f20,#5e0b17)}.alliance.blue{background:linear-gradient(270deg,#075f9a,#063e66)}.alliance .name{font-size:14px;font-weight:900;text-transform:uppercase}.bigscore{font-size:92px;font-weight:950;line-height:.95;letter-spacing:-.06em}.breakdown{display:flex;gap:10px;font-size:11px;opacity:.9;margin-top:10px}.core{background:#eef0f3;color:#111;display:flex;align-items:center;justify-content:center;flex-direction:column;border-left:1px solid #fff;border-right:1px solid #fff}.core .match{font-size:11px;font-weight:900;text-transform:uppercase}.timer{font-size:58px;font-weight:950;line-height:1;margin:8px 0}.gamephase{font-size:11px;font-weight:950;text-transform:uppercase;text-align:center;max-width:210px}.hubmode{margin-top:9px;border:2px solid #111;padding:5px 8px;font-size:10px;font-weight:950}
-    .actions{padding:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;border-bottom:1px solid #223044}.actions .btn{min-height:46px}.actions .btn.active{box-shadow:0 0 0 2px #fff inset}
-    .controlgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px}.mini{background:#0a1118;border:1px solid #223044;border-radius:9px;padding:11px}.mini h3{font-size:10px;text-transform:uppercase;letter-spacing:.11em;color:#b6c4d7;margin:0 0 9px}.adj{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;margin-top:6px}.adj .val{font-weight:900;font-variant-numeric:tabular-nums}.kv{display:flex;justify-content:space-between;border-top:1px solid #1f2d3e;padding:7px 0;font-size:11px}.kv:first-of-type{border-top:0}.kv span{color:var(--muted)}
-    .log{height:308px;overflow:auto;background:#05080c;padding:10px;font:10.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#a6c6b4}.log div{margin-bottom:2px}.log .event{color:#fff}.log .ref{color:#ffd56a}.log .err{color:#ff8694}.log .sys{color:#88baff}
-    .statusgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{background:#0a1118;border:1px solid #223044;border-radius:8px;padding:10px}.stat strong{display:block;font-size:19px}.stat span{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-    .right-buttons{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.notice{font-size:10px;line-height:1.45;color:#b8c5d5;border:1px solid #2a3a4f;background:#0c141d;padding:9px;border-radius:8px;margin-top:10px}.danger-note{border-color:rgba(255,159,67,.35);background:rgba(255,159,67,.06);color:#e7c18e}
-    @media(max-width:1200px){.main{grid-template-columns:300px 1fr}.main>.panel:last-child{grid-column:1/-1}.scorecard{grid-template-columns:1fr 210px 1fr}.bigscore{font-size:70px}}
-    @media(max-width:820px){.main{grid-template-columns:1fr}.top{flex-wrap:wrap}.scorecard{grid-template-columns:1fr 155px 1fr}.bigscore{font-size:52px}.timer{font-size:42px}.actions{grid-template-columns:1fr 1fr}.controlgrid{grid-template-columns:1fr}}
+    :root{
+      --bg:#070b10;--panel:#101821;--panel2:#0b1219;--panel3:#141f2b;--line:#263649;
+      --text:#f4f7fb;--muted:#889bb1;--red:#ed1c2e;--red2:#8e0d18;--blue:#0878bd;--blue2:#064a76;
+      --yellow:#ffe600;--green:#20d98a;--orange:#ff9f43;--danger:#b61e34;--white:#f5f6f7;
+    }
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}
+    body{background:radial-gradient(circle at 50% -15%,#16314a 0,#0a131d 28%,#070b10 62%);min-height:100vh}
+    .shell{max-width:1780px;margin:0 auto;padding:12px}.top{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #203044;border-radius:12px;background:rgba(8,14,20,.96);backdrop-filter:blur(16px);box-shadow:0 14px 40px rgba(0,0,0,.35)}
+    .brand{font-size:19px;font-weight:1000;letter-spacing:-.03em;white-space:nowrap}.brand small{display:block;font-size:8px;color:var(--muted);letter-spacing:.15em;margin-top:2px}.spacer{flex:1}
+    .chip{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#0e1720;border-radius:999px;padding:6px 9px;font-size:10px;color:#c8d5e3;white-space:nowrap}.dot{width:8px;height:8px;border-radius:50%;background:#5c6876}.dot.on{background:var(--green);box-shadow:0 0 12px rgba(32,217,138,.55)}.dot.warn{background:var(--yellow)}
+    input,select,textarea{background:#09121a;border:1px solid #2c4055;color:#fff;border-radius:7px;padding:8px 9px;outline:none}input:focus,select:focus,textarea:focus{border-color:#5f8db7;box-shadow:0 0 0 3px rgba(95,141,183,.12)}.top input{width:88px;text-transform:uppercase}
+    .btn{border:0;border-radius:8px;padding:9px 12px;font-weight:900;cursor:pointer;background:#29384a;color:#fff;transition:.15s}.btn:hover{filter:brightness(1.12)}.btn:disabled{opacity:.35;cursor:not-allowed;filter:none}.btn.blue{background:#176fd1}.btn.green{background:var(--green);color:#06120d}.btn.yellow{background:var(--yellow);color:#111}.btn.red{background:var(--danger)}.btn.ghost{background:transparent;border:1px solid #354a61}.btn.orange{background:#b96818}.btn.sm{padding:6px 8px;font-size:10px}.btn.xs{padding:4px 7px;font-size:9px}.btn.active{box-shadow:inset 0 0 0 2px #fff}
+    .tabs{display:flex;gap:6px;margin:10px 0}.tab{border:1px solid #24364a;background:#0c151e;color:#8da1b7;border-radius:9px;padding:9px 14px;font-size:11px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}.tab.active{background:var(--yellow);border-color:var(--yellow);color:#111}.view{display:none}.view.active{display:block}
+    .grid{display:grid;grid-template-columns:330px minmax(560px,1fr) 360px;gap:10px}.panel{border:1px solid #223248;border-radius:12px;background:linear-gradient(180deg,#111a24,#0c131b);overflow:hidden;box-shadow:0 16px 42px rgba(0,0,0,.18)}.panel h2{margin:0;padding:11px 13px;border-bottom:1px solid #223248;color:#b7c7d9;font-size:10px;letter-spacing:.14em;text-transform:uppercase}.body{padding:12px}.subhead{font-size:10px;color:#9eb0c4;letter-spacing:.12em;text-transform:uppercase;font-weight:900;margin:14px 0 7px}.subhead:first-child{margin-top:0}
+    .field{display:grid;grid-template-columns:1fr 1fr;gap:8px}.field.three{grid-template-columns:repeat(3,1fr)}.field.four{grid-template-columns:repeat(4,1fr)}.field .wide{grid-column:1/-1}.field label,.label{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.07em;font-weight:800;margin-bottom:4px}.field input,.field select{width:100%}.row{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.row.end{justify-content:flex-end}.notice{margin-top:9px;padding:8px 9px;border-radius:8px;border:1px solid #2a4057;background:#0b151f;color:#aebed0;font-size:10px;line-height:1.45}.notice strong{color:#fff}.notice.yellow{border-color:rgba(255,230,0,.35);background:rgba(255,230,0,.06);color:#e6dca0}.notice.green{border-color:rgba(32,217,138,.35);background:rgba(32,217,138,.06);color:#a8dfc5}
+    .teamcols{display:grid;grid-template-columns:1fr 1fr;gap:8px}.teamcol{padding:9px;border-radius:9px}.teamcol.red{background:rgba(237,28,46,.10);border:1px solid rgba(237,28,46,.32)}.teamcol.blue{background:rgba(8,120,189,.11);border:1px solid rgba(8,120,189,.35)}.teamcol h3{font-size:10px;text-transform:uppercase;letter-spacing:.09em;margin:0 0 7px}.team-input{display:grid;grid-template-columns:1fr 1.2fr;gap:5px;margin-top:5px}.team-input input{width:100%;min-width:0}
+    .scorecard{display:grid;grid-template-columns:1fr 245px 1fr;min-height:238px}.allianceScore{padding:20px;display:flex;flex-direction:column;justify-content:center}.allianceScore.red{background:linear-gradient(90deg,#8b0d1a,#5f0a13)}.allianceScore.blue{background:linear-gradient(270deg,#075b92,#043c61)}.allianceScore .name{font-size:13px;font-weight:950;text-transform:uppercase}.bigscore{font-size:88px;line-height:.93;font-weight:1000;letter-spacing:-.06em}.scoremeta{display:flex;gap:11px;flex-wrap:wrap;font-size:10px;margin-top:10px;color:#e7edf5}.scoremeta b{color:#fff}.core{background:#f0f1f2;color:#111;display:flex;align-items:center;justify-content:center;flex-direction:column;border-inline:1px solid #fff;padding:10px;text-align:center}.core .match{font-size:10px;font-weight:950;text-transform:uppercase}.timer{font-size:58px;font-weight:1000;line-height:1;margin:7px 0}.gamephase{font-size:11px;font-weight:1000;text-transform:uppercase;max-width:220px}.hubmode{margin-top:8px;border:2px solid #111;padding:4px 7px;font-size:9px;font-weight:1000}.auto-decision{font-size:8px;margin-top:6px;font-weight:800;color:#4b5560}
+    .phasebar{display:flex;gap:5px;padding:9px;border-bottom:1px solid #223248;background:#091019;overflow:auto}.phasepill{min-width:78px;flex:1;border:1px solid #2b3e54;border-radius:6px;padding:6px 5px;text-align:center;color:#6f849b;font-size:8px;font-weight:950;letter-spacing:.05em}.phasepill.active{background:var(--yellow);border-color:var(--yellow);color:#111}.phasepill.done{border-color:#3a745c;color:#77c6a4}
+    .match-actions{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;padding:10px;border-top:1px solid #223248}.match-actions .btn{min-height:43px}.quick-actions{padding:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.quick-actions .btn{min-height:40px}
+    .controlgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:0 10px 10px}.mini{background:#091119;border:1px solid #213146;border-radius:9px;padding:10px}.mini h3{margin:0 0 8px;color:#aabbd0;font-size:9px;text-transform:uppercase;letter-spacing:.12em}.kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid #1d2b3b;font-size:10px}.kv:first-of-type{border-top:0}.kv span{color:var(--muted)}.adjust{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:5px;margin-top:6px;font-size:10px}.adjust strong{min-width:30px;text-align:center}
+    .statusgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.stat{background:#091119;border:1px solid #223248;border-radius:8px;padding:9px}.stat strong{display:block;font-size:18px}.stat span{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.log{height:290px;overflow:auto;background:#030609;padding:9px;font:10px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#a6c8b5}.log div{margin-bottom:2px}.log .sys{color:#89baff}.log .event{color:#f2f5f7}.log .ref{color:#ffe179}.log .err{color:#ff8796}
+    .regional-layout{display:grid;grid-template-columns:420px 1fr;gap:10px}.stack{display:grid;gap:10px}.roster-table,.data-table{width:100%;border-collapse:collapse;font-size:10px}.roster-table th,.roster-table td,.data-table th,.data-table td{padding:6px 6px;border-bottom:1px solid #1f2e40;text-align:left}.roster-table th,.data-table th{position:sticky;top:0;background:#0b141d;color:#8ea2b8;font-size:8px;text-transform:uppercase;letter-spacing:.07em;z-index:1}.roster-table input{width:100%;padding:6px}.scroll{overflow:auto;max-height:420px}.schedule-row.final{background:rgba(32,217,138,.05)}.schedule-row.loaded{outline:1px solid var(--yellow);outline-offset:-1px}.surrogate{color:var(--yellow);font-weight:900}.ranknum{font-size:16px;font-weight:1000}.rank-up{color:#47d69a}.rank-down{color:#ff7a89}.rank-flat{color:#8393a5}.metric{font-variant-numeric:tabular-nums}.empty{color:#718399;font-style:italic;text-align:center;padding:18px}
+    .alliance-builder{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.alliance-card{border:1px solid #2a3d53;background:#09131c;border-radius:9px;padding:9px}.alliance-card h4{margin:0 0 7px;font-size:11px}.alliance-card select{width:100%;margin-top:5px;padding:6px}.playoff-row{display:grid;grid-template-columns:130px 1fr 70px 1fr 88px;align-items:center;gap:6px;padding:7px 8px;border-bottom:1px solid #1f2e40;font-size:10px}.playoff-row .seed{font-weight:900}.playoff-row.done{background:rgba(32,217,138,.05)}.champion{padding:12px;background:var(--yellow);color:#111;font-size:20px;font-weight:1000;text-align:center;border-radius:9px;margin-top:9px;display:none}.champion.show{display:block}
+    .tuning-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.setting{display:grid;grid-template-columns:1fr 110px;gap:9px;align-items:center;padding:8px 0;border-bottom:1px solid #1f2f42}.setting:last-child{border-bottom:0}.setting b{font-size:10px}.setting small{display:block;color:var(--muted);font-size:8px;line-height:1.35;margin-top:2px}.setting input,.setting select{width:100%;padding:7px}.sliderline{display:grid;grid-template-columns:1fr 60px;gap:7px;align-items:center}.sliderline input[type=range]{padding:0;border:0;box-shadow:none}.sliderline output{text-align:right;font-size:10px;font-weight:900;color:#c8d7e6}
+    .badge{display:inline-flex;align-items:center;border:1px solid #33495f;border-radius:999px;padding:3px 7px;font-size:8px;color:#9fb3c7}.badge.yellow{border-color:#716a1f;color:#ffe977}.badge.green{border-color:#236f52;color:#80e0b4}.hidden{display:none!important}
+    @media(max-width:1280px){.grid{grid-template-columns:300px 1fr}.grid>.panel:last-child{grid-column:1/-1}.regional-layout{grid-template-columns:1fr}.scorecard{grid-template-columns:1fr 210px 1fr}.bigscore{font-size:70px}}
+    @media(max-width:820px){.shell{padding:7px}.top{flex-wrap:wrap}.tabs{overflow:auto}.grid{grid-template-columns:1fr}.scorecard{grid-template-columns:1fr 150px 1fr}.bigscore{font-size:50px}.timer{font-size:40px}.match-actions{grid-template-columns:1fr 1fr}.quick-actions{grid-template-columns:1fr 1fr}.controlgrid,.tuning-grid{grid-template-columns:1fr}.field.three,.field.four{grid-template-columns:1fr 1fr}.regional-layout{grid-template-columns:1fr}.alliance-builder{grid-template-columns:1fr}.playoff-row{grid-template-columns:1fr;gap:3px}.chip.hide-mobile{display:none}}
   </style>
 </head>
 <body>
 <div class="shell">
   <header class="top">
-    <div class="brand">REBUILT FMS <small>BACKSTAGE / SCOREKEEPER</small></div>
+    <div class="brand">REBUILT FMS <small>BACKSTAGE · SCOREKEEPER · EVENT CONTROL</small></div>
     <div class="chip"><span id="mqttDot" class="dot"></span><span id="mqttStatus">MQTT OFFLINE</span></div>
     <div class="chip"><span id="hubDot" class="dot warn"></span><span id="hubStatus">HUB WAITING</span></div>
-    <div class="chip"><span id="refDot" class="dot warn"></span><span id="refStatus">REF WAITING</span></div>
+    <div class="chip hide-mobile"><span id="refDot" class="dot warn"></span><span id="refStatus">REF WAITING</span></div>
     <div class="spacer"></div>
-    <input id="roomInput" value="HUB1" aria-label="room" />
+    <span id="headerEvent" class="badge">Single Match</span>
+    <input id="roomInput" value="HUB1" aria-label="Room ID" />
     <button class="btn blue" onclick="connectNetwork()">Connect</button>
   </header>
 
-  <main class="main">
-    <section class="panel">
-      <h2>Pre-match setup</h2>
-      <div class="body">
-        <div class="field">
-          <div class="wide"><label>Event name</label><input id="eventName" value="REBUILT Human Player Invitational" /></div>
-          <div><label>Mode</label><select id="eventMode"><option value="single">Single Match</option><option value="regional">Regional Mode</option><option value="test">FMS Test</option></select></div>
-          <div><label>Match type</label><select id="matchType"><option>Qualification</option><option>Practice</option><option>Playoff</option></select></div>
-          <div><label>Match #</label><input id="matchNumber" type="number" min="1" value="24" /></div>
-          <div><label>Total matches</label><input id="totalMatches" type="number" min="1" value="72" /></div>
-        </div>
-        <div class="teams">
-          <div class="teamcol red"><b>Red alliance</b><input id="r1" value="2976"/><input id="r2" value="4096"/><input id="r3" value="6329"/></div>
-          <div class="teamcol blue"><b>Blue alliance</b><input id="b1" value="1318"/><input id="b2" value="3476"/><input id="b3" value="5460"/></div>
-        </div>
-        <div class="field" style="margin-top:10px">
-          <div><label>Minor foul pts</label><input id="minorPts" type="number" value="5" min="0"/></div>
-          <div><label>Major foul pts</label><input id="majorPts" type="number" value="15" min="0"/></div>
-        </div>
-        <div style="display:flex;gap:7px;margin-top:11px;flex-wrap:wrap"><button class="btn green" onclick="applySetup()">Load Match</button><button class="btn ghost" onclick="saveEventPreset()">Save Preset</button><button class="btn ghost" onclick="nextMatch()">Next Match</button></div>
-        <div class="notice">Regional Mode v1 preserves event identity, match count and teams between matches. Full schedule generation, standings and playoff bracket are intentionally left for the next tournament-management pass.</div>
-      </div>
+  <nav class="tabs">
+    <button id="tabMatch" class="tab active" onclick="showView('match')">Match Control</button>
+    <button id="tabRegional" class="tab" onclick="showView('regional')">Regional Manager</button>
+    <button id="tabTuning" class="tab" onclick="showView('tuning')">Game + Broadcast Tuning</button>
+  </nav>
 
-      <h2>Match controls</h2>
-      <div class="body">
-        <div class="right-buttons"><button class="btn yellow" onclick="startMatch()">START MATCH</button><button class="btn red" onclick="abortMatch()">ABORT</button><button class="btn ghost" onclick="resetMatch()">RESET</button></div>
-        <div class="right-buttons"><button class="btn ghost" onclick="setScreen('PREVIEW')">Preview</button><button class="btn ghost" onclick="setScreen('REVIEW')">Under Review</button><button class="btn ghost" onclick="setScreen('RESULTS')">Show Results</button></div>
-        <div class="notice danger-note"><b>One-HUB game logic is locked to your prototype:</b> 20s Free For All → 20s Red → 20s Blue → 20s Red → 10s Blue → 30s Mayhem. Mayhem keeps the 60% bias toward the losing alliance.</div>
-      </div>
-    </section>
+  <!-- MATCH CONTROL -->
+  <section id="viewMatch" class="view active">
+    <div class="grid">
+      <section class="panel">
+        <h2>Match Load</h2>
+        <div class="body">
+          <div class="field">
+            <div class="wide"><label>Event name</label><input id="eventName" value="REBUILT Human Player Invitational"></div>
+            <div><label>Mode</label><select id="eventMode" onchange="modeChanged()"><option value="single">Single Match</option><option value="regional">Regional Mode</option><option value="test">FMS Test</option></select></div>
+            <div><label>Match format</label><select id="matchFormat" onchange="renderManualTeamInputs()"><option value="2">4 players · 2v2</option><option value="3">6 players · 3v3</option></select></div>
+            <div><label>Match type</label><select id="matchType"><option>Qualification</option><option>Practice</option><option>Playoff</option></select></div>
+            <div><label>Match #</label><input id="matchNumber" type="number" min="1" value="1"></div>
+            <div class="wide"><label>Total qualification matches</label><input id="totalMatches" type="number" min="1" value="1"></div>
+          </div>
+          <div class="subhead">Field teams</div>
+          <div class="teamcols">
+            <div class="teamcol red"><h3>Red Alliance</h3><div id="manualRedTeams"></div></div>
+            <div class="teamcol blue"><h3>Blue Alliance</h3><div id="manualBlueTeams"></div></div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn green" onclick="applyManualMatch()">Load Match</button>
+            <button class="btn ghost" onclick="stageMatch()">Stage on Field</button>
+            <button class="btn ghost" onclick="saveQuickPreset()">Save Preset</button>
+          </div>
+          <div id="loadedMatchNote" class="notice"><strong>Stage on Field</strong> sends the Audience Display to the live camera + match scoreboard before the match starts, just like an FRC field presentation.</div>
+        </div>
 
-    <section class="panel stage">
-      <div class="phasebar">
-        <div id="p-preview" class="phase-pill active">PREVIEW</div><div id="p-match" class="phase-pill">MATCH</div><div id="p-review" class="phase-pill">REVIEW</div><div id="p-results" class="phase-pill">RESULTS</div>
-      </div>
-      <div class="scorecard">
-        <div class="alliance red"><div class="name">Red Alliance</div><div id="redScore" class="bigscore">0</div><div class="breakdown"><span>Fuel <b id="redFuel">0</b></span><span>Penalty <b id="redPenalty">0</b></span></div></div>
-        <div class="core"><div id="matchLabel" class="match">Qualification 24 of 72</div><div id="timer" class="timer">2:00</div><div id="gamePhase" class="gamephase">PRE-MATCH READY</div><div id="hubMode" class="hubmode">HUB READY</div></div>
-        <div class="alliance blue"><div class="name">Blue Alliance</div><div id="blueScore" class="bigscore">0</div><div class="breakdown"><span>Fuel <b id="blueFuel">0</b></span><span>Penalty <b id="bluePenalty">0</b></span></div></div>
-      </div>
-      <div>
-        <div class="actions">
+        <h2>Match Display</h2>
+        <div class="body">
+          <div class="row">
+            <button class="btn ghost" onclick="setScreen('PREVIEW')">Preview</button>
+            <button class="btn ghost" onclick="stageMatch(false)">Field / Match</button>
+            <button class="btn ghost" onclick="setScreen('REVIEW')">Under Review</button>
+            <button class="btn ghost" onclick="setScreen('RESULTS')">Results</button>
+          </div>
+          <div class="notice yellow"><strong>FRC timing:</strong> 20s Free For All → 3s scoring delay → 10s Transition → four 25s Alliance Shifts → 30s Mayhem End Game. Shift 1 is active for the alliance that <em>lost</em> Free For All; ties are randomized, exactly mirroring the 2026 HUB status rule.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="phasebar">
+          <div id="p-auto" class="phasepill">AUTO / FFA</div><div id="p-delay" class="phasepill">3s DELAY</div><div id="p-transition" class="phasepill">TRANSITION</div><div id="p-shift1" class="phasepill">SHIFT 1</div><div id="p-shift2" class="phasepill">SHIFT 2</div><div id="p-shift3" class="phasepill">SHIFT 3</div><div id="p-shift4" class="phasepill">SHIFT 4</div><div id="p-endgame" class="phasepill">END GAME</div>
+        </div>
+        <div class="scorecard">
+          <div class="allianceScore red"><div class="name">Red Alliance</div><div id="redScore" class="bigscore">0</div><div class="scoremeta"><span>Raw Fuel <b id="redFuel">0</b></span><span>Fuel Pts <b id="redFuelPts">0</b></span><span>Penalty <b id="redPenalty">0</b></span></div></div>
+          <div class="core"><div id="matchLabel" class="match">Qualification 1 of 1</div><div id="timer" class="timer">0:20</div><div id="gamePhase" class="gamephase">PRE-MATCH READY</div><div id="hubMode" class="hubmode">HUB READY</div><div id="autoDecision" class="auto-decision">AUTO decision pending</div></div>
+          <div class="allianceScore blue"><div class="name">Blue Alliance</div><div id="blueScore" class="bigscore">0</div><div class="scoremeta"><span>Raw Fuel <b id="blueFuel">0</b></span><span>Fuel Pts <b id="blueFuelPts">0</b></span><span>Penalty <b id="bluePenalty">0</b></span></div></div>
+        </div>
+        <div class="match-actions">
+          <button class="btn ghost" onclick="stageMatch()">STAGE FIELD</button>
+          <button id="startBtn" class="btn yellow" onclick="startMatch()">START MATCH</button>
+          <button class="btn red" onclick="abortMatch()">ABORT</button>
+          <button class="btn ghost" onclick="resetMatch(true)">RESET</button>
+          <button class="btn green" onclick="finalizeCurrentResult()">FINALIZE RESULT</button>
+        </div>
+        <div class="quick-actions">
           <button class="btn" onclick="manualFuel('RED',1)">RED +1 FUEL</button><button class="btn" onclick="manualFuel('RED',-1)">RED −1</button>
           <button class="btn" onclick="manualFuel('BLUE',1)">BLUE +1 FUEL</button><button class="btn" onclick="manualFuel('BLUE',-1)">BLUE −1</button>
         </div>
         <div class="controlgrid">
-          <div class="mini"><h3>Match state</h3><div class="kv"><span>Screen</span><b id="screenState">PREVIEW</b></div><div class="kv"><span>Raw HUB events</span><b id="hubEvents">0</b></div><div class="kv"><span>Last chute</span><b id="lastChute">--</b></div><div class="kv"><span>Last score assignment</span><b id="lastAssignment">--</b></div></div>
-          <div class="mini"><h3>Score correction</h3><div class="adj"><span>Red penalty award</span><span class="val" id="rpMini">0</span><span><button class="btn sm" onclick="adjustPenalty('RED',-5)">−5</button> <button class="btn sm" onclick="adjustPenalty('RED',5)">+5</button></span></div><div class="adj"><span>Blue penalty award</span><span class="val" id="bpMini">0</span><span><button class="btn sm" onclick="adjustPenalty('BLUE',-5)">−5</button> <button class="btn sm" onclick="adjustPenalty('BLUE',5)">+5</button></span></div></div>
+          <div class="mini"><h3>Match State</h3><div class="kv"><span>Audience screen</span><b id="screenState">PREVIEW</b></div><div class="kv"><span>Period</span><b id="periodState">PREMATCH</b></div><div class="kv"><span>Raw HUB events</span><b id="hubEvents">0</b></div><div class="kv"><span>Last chute</span><b id="lastChute">—</b></div><div class="kv"><span>Last assignment</span><b id="lastAssignment">—</b></div></div>
+          <div class="mini"><h3>Score Correction</h3><div class="adjust"><span>Red penalty award</span><strong id="rpMini">0</strong><button class="btn xs" onclick="adjustPenalty('RED',-5)">−5</button><button class="btn xs" onclick="adjustPenalty('RED',5)">+5</button></div><div class="adjust"><span>Blue penalty award</span><strong id="bpMini">0</strong><button class="btn xs" onclick="adjustPenalty('BLUE',-5)">−5</button><button class="btn xs" onclick="adjustPenalty('BLUE',5)">+5</button></div><div class="adjust"><span>Red manual bonus RP</span><strong id="redBonusMini">0</strong><button class="btn xs" onclick="setManualBonus('RED',0)">0</button><button class="btn xs" onclick="setManualBonus('RED',1)">1</button></div><div class="adjust"><span>Blue manual bonus RP</span><strong id="blueBonusMini">0</strong><button class="btn xs" onclick="setManualBonus('BLUE',0)">0</button><button class="btn xs" onclick="setManualBonus('BLUE',1)">1</button></div><div class="row" style="margin-top:8px"><button class="btn sm ghost" onclick="undoLastScore()">Undo last score action</button></div></div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="panel">
-      <h2>Live operations</h2>
-      <div class="body">
-        <div class="statusgrid"><div class="stat"><strong id="hubAge">--</strong><span>Hub heartbeat age</span></div><div class="stat"><strong id="refCount">0</strong><span>Ref events</span></div><div class="stat"><strong id="stateSeq">0</strong><span>State packets</span></div><div class="stat"><strong id="matchId">Q24</strong><span>Match ID</span></div></div>
+      <section class="panel">
+        <h2>System Health</h2>
+        <div class="body">
+          <div class="statusgrid"><div class="stat"><strong id="hubAge">—</strong><span>HUB heartbeat age</span></div><div class="stat"><strong id="refCount">0</strong><span>Ref events</span></div><div class="stat"><strong id="stateSeq">0</strong><span>State packets</span></div><div class="stat"><strong id="matchId">Q1</strong><span>Match ID</span></div></div>
+          <div class="row" style="margin-top:9px"><button class="btn sm ghost" onclick="exportSnapshot()">Snapshot JSON</button><button class="btn sm ghost" onclick="exportCurrentResultCsv(false)">Result CSV</button></div>
+        </div>
+        <h2>Event Log</h2><div id="logBox" class="log"></div>
+        <div class="body"><div class="row"><button class="btn sm ghost" onclick="clearLog()">Clear log</button></div></div>
+      </section>
+    </div>
+  </section>
+
+  <!-- REGIONAL MANAGER -->
+  <section id="viewRegional" class="view">
+    <div class="regional-layout">
+      <div class="stack">
+        <section class="panel">
+          <h2>Regional Setup</h2>
+          <div class="body">
+            <div class="field">
+              <div class="wide"><label>Event name</label><input id="regionalEventName" value="REBUILT Human Player Regional"></div>
+              <div><label>Teams per alliance</label><select id="regionalTeamsPerAlliance" onchange="regionalConfigChanged()"><option value="2">2 · 4 total / match</option><option value="3">3 · 6 total / match</option></select></div>
+              <div><label>Target appearances/team</label><select id="regionalTargetAppearances" onchange="updateQualSuggestion()"><option>6</option><option selected>8</option><option>10</option><option>12</option></select></div>
+              <div><label>Suggested qualification matches</label><input id="qualSuggestion" readonly></div>
+              <div><label>Qualification matches to generate</label><input id="regionalQualCount" type="number" min="1" value="12"></div>
+            </div>
+            <div id="qualMath" class="notice">Add teams to calculate a suggested schedule.</div>
+            <div class="row" style="margin-top:9px"><button class="btn green" onclick="generateQualSchedule()">Generate Qualifications</button><button class="btn ghost" onclick="loadNextUnplayedQual()">Load Next Unplayed</button></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Team Roster</h2>
+          <div class="body">
+            <div class="row"><button class="btn sm blue" onclick="addRosterTeam()">+ Add Team</button><button class="btn sm ghost" onclick="exportTeamsCsv()">Export Teams CSV</button><label class="btn sm ghost" style="cursor:pointer">Import Teams CSV<input id="teamCsvInput" type="file" accept=".csv,text/csv" hidden onchange="importTeamsCsv(event)"></label></div>
+          </div>
+          <div class="scroll"><table class="roster-table"><thead><tr><th style="width:32%">Team / ID</th><th>Name</th><th style="width:42px"></th></tr></thead><tbody id="rosterBody"></tbody></table></div>
+        </section>
+
+        <section class="panel">
+          <h2>Event Backup</h2>
+          <div class="body"><div class="row"><button class="btn sm ghost" onclick="exportEventBackup()">Export Event JSON</button><label class="btn sm ghost" style="cursor:pointer">Restore Event JSON<input id="eventBackupInput" type="file" accept="application/json,.json" hidden onchange="importEventBackup(event)"></label><button class="btn sm red" onclick="clearRegionalEvent()">Clear Regional</button></div><div class="notice green"><strong>No database required.</strong> Roster, schedule, rankings, alliances and results are saved in this browser's localStorage. Export an Event JSON periodically as a portable backup.</div></div>
+        </section>
       </div>
-      <h2>Event log</h2>
-      <div id="logBox" class="log"><div class="sys">[System] Backstage ready.</div></div>
-      <div class="body"><div class="right-buttons"><button class="btn ghost sm" onclick="undoLastScore()">Undo last score</button><button class="btn ghost sm" onclick="clearLog()">Clear log</button><button class="btn ghost sm" onclick="exportSnapshot()">Export snapshot</button></div></div>
-    </section>
-  </main>
+
+      <div class="stack">
+        <section class="panel">
+          <h2>Qualification Schedule</h2>
+          <div class="body"><div class="row"><span id="scheduleSummary" class="badge">No schedule</span><button class="btn sm ghost" onclick="exportScheduleCsv()">Export Schedule CSV</button><button class="btn sm ghost" onclick="exportAllResultsCsv()">Export All Results CSV</button></div></div>
+          <div class="scroll" style="max-height:360px"><table class="data-table"><thead><tr><th>#</th><th>Red Alliance</th><th>Blue Alliance</th><th>Status</th><th></th></tr></thead><tbody id="scheduleBody"></tbody></table></div>
+        </section>
+
+        <section class="panel">
+          <h2>Live Qualification Rankings</h2>
+          <div class="scroll" style="max-height:350px"><table class="data-table"><thead><tr><th>Rank</th><th>Team</th><th>W-L-T</th><th>RS</th><th>Avg Score*</th><th>Avg AUTO</th><th>Avg Fuel</th></tr></thead><tbody id="rankingsBody"></tbody></table></div>
+          <div class="body"><div class="notice">*Human-player adaptation of the 2026 ranking tiebreakers: Ranking Score first, then average alliance match score excluding foul awards, average Free For All fuel, average total fuel, then deterministic event random order. Win = 3 RP, tie = 1 RP; Energized/Supercharged thresholds and the optional manual bonus RP come from Game Tuning.</div></div>
+        </section>
+
+        <section class="panel">
+          <h2>Alliance Selection + Playoffs</h2>
+          <div class="body">
+            <div class="field three"><div><label>Alliance count</label><select id="playoffAllianceCount" onchange="renderAllianceBuilder()"><option value="8" selected>8 Alliances · FRC Double Elim</option></select></div><div><label>Active teams/alliance</label><input id="playoffTeamCount" readonly value="2"></div><div><label>Bracket</label><input readonly value="2026 double elimination"></div></div>
+            <div class="row" style="margin-top:9px"><button class="btn sm blue" onclick="seedAllianceCaptains()">Seed Captains from Rankings</button><button class="btn sm green" onclick="buildPlayoffBracket()">Build Playoff Bracket</button></div>
+            <div id="allianceBuilder" class="alliance-builder" style="margin-top:10px"></div>
+          </div>
+          <div id="playoffList"></div>
+          <div id="championBanner" class="champion"></div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- TUNING -->
+  <section id="viewTuning" class="view">
+    <div class="tuning-grid">
+      <section class="panel">
+        <h2>Game Balancing · Safe Controls</h2>
+        <div class="body">
+          <div class="setting"><div><b>Free For All / AUTO fuel multiplier</b><small>Only changes points. AUTO winner for Shift 1 still uses raw fuel count, as FIRST does.</small></div><select id="autoMultiplier"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option></select></div>
+          <div class="setting"><div><b>Transition fuel multiplier</b><small>Applies during 2:20–2:10. Assignment stays 50/50 because both alliance HUBs are conceptually active.</small></div><select id="transitionMultiplier"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option></select></div>
+          <div class="setting"><div><b>Alliance Shift fuel multiplier</b><small>Applies to Shift 1–4. Fuel is assigned directly to the currently active alliance.</small></div><select id="shiftMultiplier"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option></select></div>
+          <div class="setting"><div><b>Mayhem / End Game multiplier</b><small>Applies during the final 0:30.</small></div><select id="endgameMultiplier"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option></select></div>
+          <div class="setting"><div><b>Free-for-all RED assignment chance</b><small>Default 50%. Used in AUTO and Transition. Keep near 50 for fairness.</small></div><div class="sliderline"><input id="ffaRedChance" type="range" min="40" max="60" step="1" value="50" oninput="syncOutput(this,'ffaRedOut','%')"><output id="ffaRedOut">50%</output></div></div>
+          <div class="setting"><div><b>Mayhem comeback bias</b><small>Probability that a new ball is awarded to the currently losing alliance. Your original logic is 60%.</small></div><div class="sliderline"><input id="mayhemBias" type="range" min="50" max="80" step="1" value="60" oninput="syncOutput(this,'mayhemOut','%')"><output id="mayhemOut">60%</output></div></div>
+          <div class="setting"><div><b>Energized RP threshold</b><small>Raw accepted FUEL across the match.</small></div><input id="energizedThreshold" type="number" min="1" value="100"></div>
+          <div class="setting"><div><b>Supercharged RP threshold</b><small>Raw accepted FUEL across the match.</small></div><input id="superchargedThreshold" type="number" min="1" value="360"></div>
+          <div class="setting"><div><b>Minor / Major foul</b><small>Penalty points credited to the opponent.</small></div><div class="field"><input id="minorPts" type="number" min="0" value="5"><input id="majorPts" type="number" min="0" value="15"></div></div>
+          <div class="row" style="margin-top:10px"><button class="btn green" onclick="saveTuning()">Save Game Tuning</button><button class="btn ghost" onclick="resetGameTuning()">Reset Game Defaults</button></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Audience Broadcast Tuning</h2>
+        <div class="body">
+          <div class="notice"><strong>These controls never touch scoring or match timing.</strong> They only tune Audience Display animation/audio pacing and are broadcast live to that display.</div>
+          <div class="setting"><div><b>Countdown pop animation</b><small>Animation duration for each 3 → 2 → 1 beat.</small></div><div class="sliderline"><input id="countdownAnimMs" type="range" min="220" max="900" step="20" value="420" oninput="syncOutput(this,'countdownOut',' ms')"><output id="countdownOut">420 ms</output></div></div>
+          <div class="setting"><div><b>Results curtain hold</b><small>Initial REBUILT takeover before the result frame opens.</small></div><div class="sliderline"><input id="curtainHoldMs" type="range" min="0" max="1200" step="50" value="250" oninput="syncOutput(this,'curtainHoldOut',' ms')"><output id="curtainHoldOut">250 ms</output></div></div>
+          <div class="setting"><div><b>Results curtain opening</b><small>How quickly the red/blue curtain clears.</small></div><div class="sliderline"><input id="curtainOpenMs" type="range" min="250" max="1600" step="50" value="500" oninput="syncOutput(this,'curtainOpenOut',' ms')"><output id="curtainOpenOut">500 ms</output></div></div>
+          <div class="setting"><div><b>Score count-up duration</b><small>Time for scores to animate from zero to final.</small></div><div class="sliderline"><input id="scoreCountMs" type="range" min="250" max="2000" step="50" value="750" oninput="syncOutput(this,'scoreCountOut',' ms')"><output id="scoreCountOut">750 ms</output></div></div>
+          <div class="setting"><div><b>Winner suspense hold</b><small>Pause after final scores appear before WINNER is revealed.</small></div><div class="sliderline"><input id="winnerHoldMs" type="range" min="0" max="2000" step="50" value="550" oninput="syncOutput(this,'winnerHoldOut',' ms')"><output id="winnerHoldOut">550 ms</output></div></div>
+          <div class="setting"><div><b>Winner slide duration</b><small>Entrance speed of the yellow WINNER block.</small></div><div class="sliderline"><input id="winnerSlideMs" type="range" min="180" max="1000" step="20" value="360" oninput="syncOutput(this,'winnerSlideOut',' ms')"><output id="winnerSlideOut">360 ms</output></div></div>
+          <div class="setting"><div><b>High score follow-up</b><small>Delay after WINNER before EVENT HIGH SCORE appears.</small></div><div class="sliderline"><input id="highScoreDelayMs" type="range" min="0" max="1400" step="50" value="350" oninput="syncOutput(this,'highScoreDelayOut',' ms')"><output id="highScoreDelayOut">350 ms</output></div></div>
+          <div class="setting"><div><b>FMS audio volume</b><small>Audience computer audio gain for Cavalry Charge, Bells, Linear Popping, Steam Whistle and Buzzer.</small></div><div class="sliderline"><input id="audioVolume" type="range" min="0" max="100" step="5" value="100" oninput="syncOutput(this,'audioVolumeOut','%')"><output id="audioVolumeOut">100%</output></div></div>
+          <div class="row" style="margin-top:10px"><button class="btn green" onclick="saveTuning()">Save Broadcast Tuning</button><button class="btn ghost" onclick="resetBroadcastTuning()">Reset Broadcast Defaults</button></div>
+        </div>
+      </section>
+    </div>
+  </section>
 </div>
+
 <script>
-  let mqttClient=null, roomName='HUB1', timerInterval=null, countdownInterval=null, heartbeatInterval=null;
-  let lastHubHeartbeat=0, refEventCount=0, stateSeq=0;
-  const seenRefIds=new Set();
-  const refActions=new Map();
+  const $=id=>document.getElementById(id);
+  const clock=()=>new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  let mqttClient=null,roomName='HUB1',heartbeatInterval=null,timelineInterval=null,countdownInterval=null;
+  let lastHubHeartbeat=0,refEventCount=0,stateSeq=0,lastPeriod=null,countdownStartedAt=0,matchStartedAt=0;
+  const seenRefIds=new Set(),refActions=new Map();
   let scoreHistory=[];
+  let currentMatchRef=null;
+
+  const DEFAULT_BALANCE={autoMultiplier:1,transitionMultiplier:1,shiftMultiplier:1,endgameMultiplier:1,ffaRedChance:50,mayhemBias:60,energizedThreshold:100,superchargedThreshold:360,minorPts:5,majorPts:15};
+  const DEFAULT_BROADCAST={countdownAnimMs:420,curtainHoldMs:250,curtainOpenMs:500,scoreCountMs:750,winnerHoldMs:550,winnerSlideMs:360,highScoreDelayMs:350,audioVolume:100};
+  const PERIODS=['AUTO','DELAY','TRANSITION','SHIFT1','SHIFT2','SHIFT3','SHIFT4','ENDGAME'];
+  const fuelTemplate=()=>({AUTO:{red:0,blue:0},TRANSITION:{red:0,blue:0},SHIFT1:{red:0,blue:0},SHIFT2:{red:0,blue:0},SHIFT3:{red:0,blue:0},SHIFT4:{red:0,blue:0},ENDGAME:{red:0,blue:0}});
 
   const state={
-    eventName:'REBUILT Human Player Invitational', eventMode:'single', matchType:'Qualification', matchNumber:24,totalMatches:72,
-    teams:{red:['2976','4096','6329'],blue:['1318','3476','5460']},
-    screen:'PREVIEW', running:false, matchTime:120, phase:'PRE-MATCH READY', countdown:0,
-    redFuel:0,blueFuel:0,redPenalty:0,bluePenalty:0, redCards:[],blueCards:[],
-    rawHubEvents:0,lastChute:null,lastAssignment:null, winner:null, underReview:false
+    eventName:'REBUILT Human Player Invitational',eventMode:'single',matchType:'Qualification',matchNumber:1,totalMatches:1,customMatchLabel:'',
+    teams:{red:['R1','R2'],blue:['B1','B2']},teamMeta:{},teamRanks:{},rankMoves:{},surrogates:{red:[],blue:[]},
+    screen:'PREVIEW',running:false,countdown:0,period:'PREMATCH',phase:'PRE-MATCH READY',displayTime:20,phaseTimeRemaining:20,activeAlliance:'BOTH',
+    autoResult:null,autoReference:null,shift1Active:null,
+    fuel:fuelTemplate(),redPenalty:0,bluePenalty:0,redCards:[],blueCards:[],manualBonusRp:{red:0,blue:0},
+    rawHubEvents:0,lastChute:null,lastAssignment:null,winner:null,underReview:false,
+    balance:{...DEFAULT_BALANCE},broadcast:{...DEFAULT_BROADCAST}
   };
-  const $=id=>document.getElementById(id); const clock=()=>new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  const totalRed=()=>Math.max(0,state.redFuel+state.redPenalty), totalBlue=()=>Math.max(0,state.blueFuel+state.bluePenalty);
 
-  function loadPreset(){try{const p=JSON.parse(localStorage.getItem('rebuiltFmsPreset')||'null');if(!p)return; for(const [k,v] of Object.entries(p)){if($(k))$(k).value=v;}}catch(_){}}
-  function saveEventPreset(){const ids=['eventName','eventMode','matchType','matchNumber','totalMatches','r1','r2','r3','b1','b2','b3','minorPts','majorPts'];const p={};ids.forEach(id=>p[id]=$(id).value);localStorage.setItem('rebuiltFmsPreset',JSON.stringify(p));log('Event preset saved locally.','sys')}
+  let regional=loadRegionalStore();
 
+  function emptyRegional(){return{eventName:'REBUILT Human Player Regional',teamsPerAlliance:2,targetAppearances:8,qualCount:12,scheduleSeed:2026,roster:[],schedule:[],playoffAlliances:Array.from({length:8},(_,i)=>({seed:i+1,teams:[]})),playoffResults:{},results:[],champion:null,rankMoves:{}}}
+  function loadRegionalStore(){try{const x=JSON.parse(localStorage.getItem('rebuiltRegionalEventV4')||'null');return x&&typeof x==='object'?{...emptyRegional(),...x}:emptyRegional()}catch(_){return emptyRegional()}}
+  function saveRegionalStore(){localStorage.setItem('rebuiltRegionalEventV4',JSON.stringify(regional))}
+  function saveQuickPreset(){const ids=['eventName','eventMode','matchFormat','matchType','matchNumber','totalMatches'];const p={};ids.forEach(id=>p[id]=$(id).value);p.manual=getManualTeams();localStorage.setItem('rebuiltFmsQuickPreset',JSON.stringify(p));log('Quick match preset saved locally.','sys')}
+  function loadQuickPreset(){try{const p=JSON.parse(localStorage.getItem('rebuiltFmsQuickPreset')||'null');if(!p)return;['eventName','eventMode','matchFormat','matchType','matchNumber','totalMatches'].forEach(id=>{if(p[id]!=null&&$(id))$(id).value=p[id]});renderManualTeamInputs(p.manual)}catch(_){}}
+  function loadTuning(){try{const p=JSON.parse(localStorage.getItem('rebuiltFmsTuningV4')||'null');if(p?.balance)Object.assign(state.balance,p.balance);if(p?.broadcast)Object.assign(state.broadcast,p.broadcast)}catch(_){} applyTuningToInputs()}
+  function saveTuning(){readTuningFromInputs();localStorage.setItem('rebuiltFmsTuningV4',JSON.stringify({balance:state.balance,broadcast:state.broadcast}));log('Game and broadcast tuning saved.','sys');render();broadcastState(true)}
+  function readTuningFromInputs(){
+    state.balance={autoMultiplier:num('autoMultiplier',1),transitionMultiplier:num('transitionMultiplier',1),shiftMultiplier:num('shiftMultiplier',1),endgameMultiplier:num('endgameMultiplier',1),ffaRedChance:num('ffaRedChance',50),mayhemBias:num('mayhemBias',60),energizedThreshold:Math.max(1,num('energizedThreshold',100)),superchargedThreshold:Math.max(2,num('superchargedThreshold',360)),minorPts:Math.max(0,num('minorPts',5)),majorPts:Math.max(0,num('majorPts',15))};
+    if(state.balance.superchargedThreshold<=state.balance.energizedThreshold)state.balance.superchargedThreshold=state.balance.energizedThreshold+1;
+    state.broadcast={countdownAnimMs:num('countdownAnimMs',420),curtainHoldMs:num('curtainHoldMs',250),curtainOpenMs:num('curtainOpenMs',500),scoreCountMs:num('scoreCountMs',750),winnerHoldMs:num('winnerHoldMs',550),winnerSlideMs:num('winnerSlideMs',360),highScoreDelayMs:num('highScoreDelayMs',350),audioVolume:num('audioVolume',100)};
+  }
+  function applyTuningToInputs(){const b=state.balance,c=state.broadcast;const map={autoMultiplier:b.autoMultiplier,transitionMultiplier:b.transitionMultiplier,shiftMultiplier:b.shiftMultiplier,endgameMultiplier:b.endgameMultiplier,ffaRedChance:b.ffaRedChance,mayhemBias:b.mayhemBias,energizedThreshold:b.energizedThreshold,superchargedThreshold:b.superchargedThreshold,minorPts:b.minorPts,majorPts:b.majorPts,countdownAnimMs:c.countdownAnimMs,curtainHoldMs:c.curtainHoldMs,curtainOpenMs:c.curtainOpenMs,scoreCountMs:c.scoreCountMs,winnerHoldMs:c.winnerHoldMs,winnerSlideMs:c.winnerSlideMs,highScoreDelayMs:c.highScoreDelayMs,audioVolume:c.audioVolume};Object.entries(map).forEach(([id,v])=>{if($(id))$(id).value=v});[['ffaRedChance','ffaRedOut','%'],['mayhemBias','mayhemOut','%'],['countdownAnimMs','countdownOut',' ms'],['curtainHoldMs','curtainHoldOut',' ms'],['curtainOpenMs','curtainOpenOut',' ms'],['scoreCountMs','scoreCountOut',' ms'],['winnerHoldMs','winnerHoldOut',' ms'],['winnerSlideMs','winnerSlideOut',' ms'],['highScoreDelayMs','highScoreDelayOut',' ms'],['audioVolume','audioVolumeOut','%']].forEach(([a,b,s])=>syncOutput($(a),b,s))}
+  function resetGameTuning(){Object.assign(state.balance,DEFAULT_BALANCE);applyTuningToInputs();saveTuning()}
+  function resetBroadcastTuning(){Object.assign(state.broadcast,DEFAULT_BROADCAST);applyTuningToInputs();saveTuning()}
+  function syncOutput(input,outId,suffix=''){if(input&&$(outId))$(outId).textContent=`${input.value}${suffix}`}
+  function num(id,fallback=0){const v=Number($(id)?.value);return Number.isFinite(v)?v:fallback}
+
+  function showView(name){['match','regional','tuning'].forEach(v=>{$(`view${cap(v)}`).classList.toggle('active',v===name);$(`tab${cap(v)}`).classList.toggle('active',v===name)});if(name==='regional'){$('headerEvent').textContent='Regional Manager';renderRegional()}else if(name==='tuning')$('headerEvent').textContent='Tuning';else $('headerEvent').textContent=state.eventMode==='regional'?'Regional Mode':state.eventMode==='test'?'FMS Test':'Single Match'}
+  function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
+  function modeChanged(){state.eventMode=$('eventMode').value;$('headerEvent').textContent=state.eventMode==='regional'?'Regional Mode':state.eventMode==='test'?'FMS Test':'Single Match';if(state.eventMode==='regional'){showView('regional')}}
+
+  function cleanRoom(v){return(v||'HUB1').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,32)||'HUB1'}
   function connectNetwork(){
-    roomName=$('roomInput').value.trim().toUpperCase()||'HUB1'; $('roomInput').value=roomName;
+    roomName=cleanRoom($('roomInput').value);$('roomInput').value=roomName;localStorage.setItem('rebuiltFmsRoom',roomName);
     if(mqttClient){try{mqttClient.end(true)}catch(_){}}
     mqttClient=mqtt.connect('wss://broker.hivemq.com:8884/mqtt',{reconnectPeriod:1500,connectTimeout:5000});
-    mqttClient.on('connect',()=>{
-      $('mqttStatus').textContent='MQTT ONLINE';$('mqttDot').className='dot on';log(`Connected to room ${roomName}.`,'sys');
-      mqttClient.subscribe(`frchub/${roomName}/events`); mqttClient.subscribe(`frchub/${roomName}/ref/events`); mqttClient.subscribe(`frchub/${roomName}/hub/telemetry`);
-      broadcastState(true); startHeartbeat(); syncHub();
-    });
-    mqttClient.on('message',(topic,msg)=>{try{const data=JSON.parse(msg.toString());routeMessage(topic,data)}catch(e){log(`Parse error: ${e.message}`,'err')}});
-    mqttClient.on('close',()=>{$('mqttStatus').textContent='MQTT OFFLINE';$('mqttDot').className='dot'});
-    mqttClient.on('error',e=>log(`MQTT error: ${e.message||e}`,'err'));
+    mqttClient.on('connect',()=>{$('mqttStatus').textContent='MQTT ONLINE';$('mqttDot').className='dot on';log(`Connected to room ${roomName}.`,'sys');mqttClient.subscribe(`frchub/${roomName}/events`);mqttClient.subscribe(`frchub/${roomName}/ref/events`);mqttClient.subscribe(`frchub/${roomName}/hub/telemetry`);broadcastState(true);startHeartbeat();syncHub()});
+    mqttClient.on('message',(topic,msg)=>{try{routeMessage(topic,JSON.parse(msg.toString()))}catch(e){log(`Parse error: ${e.message}`,'err')}});
+    mqttClient.on('close',()=>{$('mqttStatus').textContent='MQTT OFFLINE';$('mqttDot').className='dot'});mqttClient.on('error',e=>log(`MQTT error: ${e.message||e}`,'err'));
   }
   function routeMessage(topic,data){
-    if(topic.endsWith('/hub/telemetry') && data.type==='HUB_HEARTBEAT'){lastHubHeartbeat=Date.now();$('hubStatus').textContent='HUB ONLINE';$('hubDot').className='dot on';return;}
-    if(topic.endsWith('/events')){
-      if(data.type==='TRIGGER'){lastHubHeartbeat=Date.now();$('hubStatus').textContent='HUB ONLINE';$('hubDot').className='dot on';handleBallScored(data.chute);}
-      if(data.type==='PONG'){lastHubHeartbeat=Date.now();$('hubStatus').textContent='HUB ONLINE';$('hubDot').className='dot on';}
-      return;
-    }
-    if(topic.endsWith('/ref/events')) handleRefEvent(data);
+    if(topic.endsWith('/hub/telemetry')&&data.type==='HUB_HEARTBEAT'){markHub();return}
+    if(topic.endsWith('/events')){if(data.type==='TRIGGER'){markHub();handleBallScored(data.chute)}if(data.type==='PONG')markHub();return}
+    if(topic.endsWith('/ref/events'))handleRefEvent(data);
   }
-  function startHeartbeat(){clearInterval(heartbeatInterval);heartbeatInterval=setInterval(()=>{
-    if(mqttClient?.connected){mqttClient.publish(`frchub/${roomName}/commands`,JSON.stringify({type:'PING',timestamp:Date.now()}));broadcastState(false)}
-    const age=lastHubHeartbeat?Date.now()-lastHubHeartbeat:null;$('hubAge').textContent=age===null?'--':age<1000?'NOW':`${(age/1000).toFixed(1)}s`;
-    if(age!==null && age>3500){$('hubStatus').textContent='HUB WAITING';$('hubDot').className='dot warn'}
-  },1000)}
+  function markHub(){lastHubHeartbeat=Date.now();$('hubStatus').textContent='HUB ONLINE';$('hubDot').className='dot on'}
+  function startHeartbeat(){clearInterval(heartbeatInterval);heartbeatInterval=setInterval(()=>{if(mqttClient?.connected){mqttClient.publish(`frchub/${roomName}/commands`,JSON.stringify({type:'PING',timestamp:Date.now()}));broadcastState(false)}const age=lastHubHeartbeat?Date.now()-lastHubHeartbeat:null;$('hubAge').textContent=age===null?'—':age<1000?'NOW':`${(age/1000).toFixed(1)}s`;if(age!==null&&age>3500){$('hubStatus').textContent='HUB WAITING';$('hubDot').className='dot warn'}},1000)}
 
-  function applySetup(){
-    state.eventName=$('eventName').value.trim()||'REBUILT Event';state.eventMode=$('eventMode').value;state.matchType=$('matchType').value;state.matchNumber=Number($('matchNumber').value)||1;state.totalMatches=Number($('totalMatches').value)||1;
-    state.teams.red=[$('r1').value,$('r2').value,$('r3').value].map(v=>v.trim());state.teams.blue=[$('b1').value,$('b2').value,$('b3').value].map(v=>v.trim());
-    resetMatch(false);setScreen('PREVIEW');saveEventPreset();log(`Loaded ${matchText()}.`,'sys');render();broadcastState(true);
+  function renderManualTeamInputs(seed){const k=Number($('matchFormat').value)||2;const existing=seed||getManualTeams();['red','blue'].forEach(side=>{const root=$(side==='red'?'manualRedTeams':'manualBlueTeams');root.innerHTML='';for(let i=0;i<k;i++){const x=existing?.[side]?.[i]||{};root.insertAdjacentHTML('beforeend',`<div class="team-input"><input class="manual-${side}-id" placeholder="Team / ID" value="${escAttr(x.id||'')}"><input class="manual-${side}-name" placeholder="Display name" value="${escAttr(x.name||'')}"></div>`)}})}
+  function getManualTeams(){const out={red:[],blue:[]};['red','blue'].forEach(side=>{document.querySelectorAll(`.manual-${side}-id`).forEach((el,i)=>out[side].push({id:el.value.trim(),name:document.querySelectorAll(`.manual-${side}-name`)[i]?.value.trim()||''}))});return out}
+  function escAttr(s){return String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+  function buildTeamMeta(red,blue,names={}){const meta={};[...red,...blue].forEach(id=>{if(!id)return;meta[id]={name:names[id]||`Team ${id}`}});return meta}
+  function applyManualMatch(){
+    readTuningFromInputs();const m=getManualTeams(),red=m.red.map(x=>x.id).filter(Boolean),blue=m.blue.map(x=>x.id).filter(Boolean),names={};m.red.concat(m.blue).forEach(x=>{if(x.id)names[x.id]=x.name||`Team ${x.id}`});
+    state.eventName=$('eventName').value.trim()||'REBUILT Event';state.eventMode=$('eventMode').value;state.matchType=$('matchType').value;state.matchNumber=Math.max(1,num('matchNumber',1));state.totalMatches=Math.max(1,num('totalMatches',1));state.customMatchLabel='';state.teams={red,blue};state.teamMeta=buildTeamMeta(red,blue,names);state.teamRanks={};state.rankMoves={};state.surrogates={red:[],blue:[]};currentMatchRef=null;
+    resetMatch(true);saveQuickPreset();$('headerEvent').textContent=state.eventMode==='regional'?'Regional Mode':state.eventMode==='test'?'FMS Test':'Single Match';log(`Loaded ${matchText()}.`,'sys');broadcastState(true)
   }
-  function nextMatch(){ $('matchNumber').value=(Number($('matchNumber').value)||1)+1; applySetup(); }
-  function matchText(){return `${state.matchType} ${state.matchNumber}${state.matchType==='Qualification'?` of ${state.totalMatches}`:''}`}
-  function matchShort(){return `${state.matchType==='Qualification'?'Q':state.matchType==='Practice'?'P':'M'}${state.matchNumber}`}
+  function stageMatch(reset=true){readTuningFromInputs();if(reset)resetMatch(false);state.screen='MATCH';state.underReview=false;if(!state.running&&state.period!=='MATCH_STARTING'){state.period='PREMATCH';state.phase='PRE-MATCH READY';state.displayTime=20;state.phaseTimeRemaining=20;state.activeAlliance='BOTH'}render();syncHub();broadcastState(true);log('Audience staged on live field view.','sys')}
 
-  // IMPORTANT: This is the user's existing one-HUB phase logic, kept intact.
-  function phaseForTime(t){
-    if(t>100)return 'FREE FOR ALL (50/50)';
-    if(t>80)return 'RED SHIFT';
-    if(t>60)return 'BLUE SHIFT';
-    if(t>40)return 'RED SHIFT';
-    if(t>30)return 'BLUE SHIFT';
-    if(t>0)return 'MAYHEM (60% BOOST)';
-    return 'MATCH COMPLETE';
-  }
-  function beginRunningMatch(){
-    if(countdownInterval){clearInterval(countdownInterval);countdownInterval=null}
-    state.countdown=0;state.running=true;state.phase=phaseForTime(state.matchTime);log('Match started.','sys');render();syncHub();broadcastState(true);
-    timerInterval=setInterval(()=>{
-      state.matchTime--;state.phase=phaseForTime(state.matchTime);
-      if(state.matchTime<=0){state.matchTime=0;state.running=false;clearInterval(timerInterval);timerInterval=null;determineWinner();log('Match complete. Awaiting review/results.','sys')}
-      render();syncHub();broadcastState(false)
-    },1000);
-  }
+  function resetScoring(){state.fuel=fuelTemplate();state.redPenalty=state.bluePenalty=0;state.redCards=[];state.blueCards=[];state.manualBonusRp={red:0,blue:0};state.rawHubEvents=0;state.lastChute=null;state.lastAssignment=null;state.winner=null;state.autoResult=null;state.autoReference=null;state.shift1Active=null;scoreHistory=[]}
+  function resetMatch(showPreview=true){clearInterval(timelineInterval);clearInterval(countdownInterval);timelineInterval=countdownInterval=null;state.running=false;state.countdown=0;matchStartedAt=0;countdownStartedAt=0;lastPeriod=null;resetScoring();state.period='PREMATCH';state.phase='PRE-MATCH READY';state.displayTime=20;state.phaseTimeRemaining=20;state.activeAlliance='BOTH';state.underReview=false;if(showPreview)state.screen='PREVIEW';render();syncHub();broadcastState(true)}
   function startMatch(){
-    resetMatch(false);state.screen='MATCH';state.running=false;state.phase='MATCH STARTING';state.countdown=3;log('Match start sequence armed: 3… 2… 1…','sys');render();syncHub();broadcastState(true);
-    countdownInterval=setInterval(()=>{
-      state.countdown--;
-      if(state.countdown<=0){beginRunningMatch();return}
-      render();syncHub();broadcastState(false);
-    },1000);
+    if(timelineInterval||countdownInterval)return;readTuningFromInputs();resetScoring();state.screen='MATCH';state.running=false;state.period='MATCH_STARTING';state.phase='MATCH STARTING';state.countdown=3;state.displayTime=20;state.phaseTimeRemaining=3;state.activeAlliance='NONE';countdownStartedAt=Date.now();lastPeriod='MATCH_STARTING';log('Match start sequence armed: 3… 2… 1…','sys');render();syncHub();broadcastState(true);
+    countdownInterval=setInterval(()=>{const left=3000-(Date.now()-countdownStartedAt),n=Math.max(0,Math.ceil(left/1000));if(n!==state.countdown){state.countdown=n;state.phaseTimeRemaining=n;render();broadcastState(false)}if(left<=0){clearInterval(countdownInterval);countdownInterval=null;beginMatch()}},80)
   }
-  function abortMatch(){if(timerInterval){clearInterval(timerInterval);timerInterval=null}if(countdownInterval){clearInterval(countdownInterval);countdownInterval=null}state.countdown=0;state.running=false;state.phase='MATCH ABORTED';log('MATCH ABORTED by scorekeeper.','err');render();syncHub();broadcastState(true)}
-  function resetMatch(showPreview=true){if(timerInterval){clearInterval(timerInterval);timerInterval=null}if(countdownInterval){clearInterval(countdownInterval);countdownInterval=null}state.running=false;state.matchTime=120;state.phase='PRE-MATCH READY';state.countdown=0;state.redFuel=state.blueFuel=state.redPenalty=state.bluePenalty=0;state.rawHubEvents=0;state.lastChute=null;state.lastAssignment=null;state.winner=null;state.underReview=false;scoreHistory=[];if(showPreview)state.screen='PREVIEW';render();syncHub();broadcastState(true)}
+  function beginMatch(){state.countdown=0;state.running=true;matchStartedAt=Date.now();lastPeriod=null;deriveTimelineState(0,true);log('MATCH START · Free For All / AUTO 0:20.','sys');timelineInterval=setInterval(tickMatch,80);tickMatch()}
+  function tickMatch(){const elapsed=(Date.now()-matchStartedAt)/1000;deriveTimelineState(elapsed,false);if(elapsed>=163){clearInterval(timelineInterval);timelineInterval=null;state.running=false;state.period='COMPLETE';state.phase='MATCH COMPLETE';state.displayTime=0;state.phaseTimeRemaining=0;state.activeAlliance='NONE';determineWinner();log('Match complete. Awaiting review/finalization.','sys');render();syncHub();broadcastState(true);return}render();syncHub();broadcastState(false)}
+  function deriveTimelineState(elapsed,force){
+    let period,phase,display,remaining,active='BOTH';
+    if(elapsed<20){period='AUTO';phase='FREE FOR ALL · AUTO';display=Math.max(0,Math.ceil(20-elapsed));remaining=display;active='BOTH'}
+    else if(elapsed<23){period='DELAY';phase='AUTO SCORING DELAY';display=0;remaining=Math.max(0,Math.ceil(23-elapsed));active='BOTH'}
+    else if(elapsed<33){period='TRANSITION';phase='TRANSITION SHIFT';display=Math.max(0,Math.ceil(140-(elapsed-23)));remaining=Math.max(0,Math.ceil(33-elapsed));active='BOTH'}
+    else if(elapsed<58){period='SHIFT1';phase='SHIFT 1';display=Math.max(0,Math.ceil(140-(elapsed-23)));remaining=Math.max(0,Math.ceil(58-elapsed));active=activeForShift(1)}
+    else if(elapsed<83){period='SHIFT2';phase='SHIFT 2';display=Math.max(0,Math.ceil(140-(elapsed-23)));remaining=Math.max(0,Math.ceil(83-elapsed));active=activeForShift(2)}
+    else if(elapsed<108){period='SHIFT3';phase='SHIFT 3';display=Math.max(0,Math.ceil(140-(elapsed-23)));remaining=Math.max(0,Math.ceil(108-elapsed));active=activeForShift(3)}
+    else if(elapsed<133){period='SHIFT4';phase='SHIFT 4';display=Math.max(0,Math.ceil(140-(elapsed-23)));remaining=Math.max(0,Math.ceil(133-elapsed));active=activeForShift(4)}
+    else{period='ENDGAME';phase='MAYHEM · END GAME';display=Math.max(0,Math.ceil(140-(elapsed-23)));remaining=Math.max(0,Math.ceil(163-elapsed));active='BOTH'}
+    if((period==='TRANSITION'||period.startsWith('SHIFT'))&&!state.shift1Active)finalizeAutoDecision();
+    if(period.startsWith('SHIFT'))active=activeForShift(Number(period.slice(-1)));
+    if(force||period!==lastPeriod){onPeriodChanged(lastPeriod,period);lastPeriod=period}
+    state.period=period;state.phase=phase;state.displayTime=display;state.phaseTimeRemaining=remaining;state.activeAlliance=active;
+  }
+  function onPeriodChanged(prev,next){if(!next)return;if(next==='DELAY')log(`AUTO ended · raw FUEL Red ${rawFuel('red','AUTO')} / Blue ${rawFuel('blue','AUTO')}. 3s scoring delay.`,'sys');if(next==='TRANSITION'){finalizeAutoDecision();log(`TELEOP / Transition begins. Shift 1 active: ${state.shift1Active}.`,'sys')}if(next.startsWith('SHIFT'))log(`${next} · active alliance ${activeForShift(Number(next.slice(-1)))}.`,'sys');if(next==='ENDGAME')log(`END GAME · MAYHEM ${state.balance.mayhemBias}% comeback bias.`,'sys')}
+  function finalizeAutoDecision(){if(state.shift1Active)return;const r=rawFuel('red','AUTO'),b=rawFuel('blue','AUTO');state.autoResult=r===b?'TIE':r>b?'RED':'BLUE';state.autoReference=state.autoResult==='TIE'?(Math.random()<.5?'RED':'BLUE'):state.autoResult;state.shift1Active=state.autoReference==='RED'?'BLUE':'RED'}
+  function activeForShift(n){if(!state.shift1Active)return'NONE';const odd=n%2===1;return odd?state.shift1Active:(state.shift1Active==='RED'?'BLUE':'RED')}
+  function abortMatch(){clearInterval(timelineInterval);clearInterval(countdownInterval);timelineInterval=countdownInterval=null;state.running=false;state.countdown=0;state.period='ABORTED';state.phase='MATCH ABORTED';state.activeAlliance='NONE';log('MATCH ABORTED by scorekeeper.','err');render();syncHub();broadcastState(true)}
 
-  // Existing one-HUB assignment logic preserved, including 50/50 and 60% losing-alliance Mayhem bias.
+  function rawFuel(side,bucket=null){if(bucket)return Number(state.fuel[bucket]?.[side]||0);return Object.values(state.fuel).reduce((sum,x)=>sum+Number(x[side]||0),0)}
+  function fuelPoints(side){const b=state.balance,f=state.fuel;return f.AUTO[side]*b.autoMultiplier+f.TRANSITION[side]*b.transitionMultiplier+(f.SHIFT1[side]+f.SHIFT2[side]+f.SHIFT3[side]+f.SHIFT4[side])*b.shiftMultiplier+f.ENDGAME[side]*b.endgameMultiplier}
+  function score(side){return Math.max(0,fuelPoints(side)+(side==='red'?state.redPenalty:state.bluePenalty))}
+  function bucketForPeriod(){return state.period==='DELAY'?'AUTO':state.period}
   function handleBallScored(chute){
-    state.rawHubEvents++;state.lastChute=String(chute);if(state.matchTime<=0||!state.running){log(`HUB trigger C${Number(chute)+1} ignored for score: match not active.`,'event');render();return}
-    let assigned='RED';
-    if(state.phase.startsWith('FREE')) assigned=Math.random()<0.5?'RED':'BLUE';
-    else if(state.phase.startsWith('RED')) assigned='RED';
-    else if(state.phase.startsWith('BLUE')) assigned='BLUE';
-    else if(state.phase.startsWith('MAYHEM')){
-      if(totalRed()===totalBlue()) assigned=Math.random()<0.5?'RED':'BLUE';
-      else {const losing=totalRed()<totalBlue()?'RED':'BLUE';const winning=totalRed()>totalBlue()?'RED':'BLUE';assigned=Math.random()<0.60?losing:winning;}
+    state.rawHubEvents++;state.lastChute=String(chute);if(!state.running||!['AUTO','DELAY','TRANSITION','SHIFT1','SHIFT2','SHIFT3','SHIFT4','ENDGAME'].includes(state.period)){log(`HUB trigger C${Number(chute)+1} ignored: match not accepting score.`,'event');render();return}
+    let assigned='RED';const ffaRed=state.balance.ffaRedChance/100;
+    if(state.period==='AUTO'||state.period==='DELAY'||state.period==='TRANSITION')assigned=Math.random()<ffaRed?'RED':'BLUE';
+    else if(state.period.startsWith('SHIFT'))assigned=activeForShift(Number(state.period.slice(-1)));
+    else if(state.period==='ENDGAME'){
+      const rs=score('red'),bs=score('blue');if(rs===bs)assigned=Math.random()<.5?'RED':'BLUE';else{const losing=rs<bs?'RED':'BLUE',winning=rs>bs?'RED':'BLUE';assigned=Math.random()<(state.balance.mayhemBias/100)?losing:winning}
     }
-    if(assigned==='RED')state.redFuel++;else state.blueFuel++;
-    state.lastAssignment=assigned;scoreHistory.push({kind:'fuel',alliance:assigned,delta:1,time:Date.now()});
-    log(`HUB C${Number(chute)+1} → ${assigned} +1 FUEL · ${state.phase}`,'event');render();syncHub();broadcastState(false);
+    if(assigned!=='RED'&&assigned!=='BLUE')return;const side=assigned.toLowerCase(),bucket=bucketForPeriod();state.fuel[bucket][side]++;state.lastAssignment=assigned;scoreHistory.push({kind:'fuel',bucket,side,delta:1,time:Date.now()});log(`HUB C${Number(chute)+1} → ${assigned} +1 FUEL · ${state.phase}`,'event');render();syncHub();broadcastState(false)
   }
-  function manualFuel(alliance,delta){const key=alliance==='RED'?'redFuel':'blueFuel';const actual=Math.max(-state[key],delta);state[key]+=actual;scoreHistory.push({kind:'fuel',alliance,delta:actual,time:Date.now(),manual:true});log(`Manual correction: ${alliance} ${actual>=0?'+':''}${actual} FUEL.`,'sys');render();syncHub();broadcastState(true)}
-  function adjustPenalty(alliance,delta){const key=alliance==='RED'?'redPenalty':'bluePenalty';const actual=Math.max(-state[key],delta);state[key]+=actual;scoreHistory.push({kind:'penalty',alliance,delta:actual,time:Date.now(),manual:true});log(`Manual penalty-award correction: ${alliance} ${actual>=0?'+':''}${actual}.`,'sys');render();syncHub();broadcastState(true)}
-  function undoLastScore(){const a=scoreHistory.pop();if(!a){log('Nothing to undo.','sys');return}const key=a.kind==='fuel'?(a.alliance==='RED'?'redFuel':'blueFuel'):(a.alliance==='RED'?'redPenalty':'bluePenalty');state[key]=Math.max(0,state[key]-a.delta);log(`Undo: ${a.alliance} ${a.kind} ${a.delta}.`,'sys');render();syncHub();broadcastState(true)}
+  function manualFuel(alliance,delta){const side=alliance.toLowerCase(),bucket=['AUTO','DELAY'].includes(state.period)?'AUTO':state.period==='PREMATCH'||state.period==='COMPLETE'||state.period==='ABORTED'||state.period==='MATCH_STARTING'?'TRANSITION':bucketForPeriod();const before=state.fuel[bucket]?.[side]||0,actual=Math.max(-before,delta);if(!state.fuel[bucket])state.fuel[bucket]={red:0,blue:0};state.fuel[bucket][side]+=actual;scoreHistory.push({kind:'fuel',bucket,side,delta:actual,time:Date.now(),manual:true});log(`Manual correction: ${alliance} ${actual>=0?'+':''}${actual} FUEL in ${bucket}.`,'sys');render();syncHub();broadcastState(true)}
+  function adjustPenalty(alliance,delta){const key=alliance==='RED'?'redPenalty':'bluePenalty',actual=Math.max(-state[key],delta);state[key]+=actual;scoreHistory.push({kind:'penalty',key,delta:actual,time:Date.now()});render();syncHub();broadcastState(true)}
+  function setManualBonus(alliance,v){state.manualBonusRp[alliance.toLowerCase()]=Number(v)||0;render();broadcastState(true)}
+  function undoLastScore(){const a=scoreHistory.pop();if(!a){log('Nothing to undo.','sys');return}if(a.kind==='fuel')state.fuel[a.bucket][a.side]=Math.max(0,state.fuel[a.bucket][a.side]-a.delta);else if(a.kind==='penalty')state[a.key]=Math.max(0,state[a.key]-a.delta);log('Last score action undone.','sys');render();syncHub();broadcastState(true)}
 
   function handleRefEvent(data){
     if(!data||!data.type)return;if(data.id&&seenRefIds.has(data.id))return;if(data.id)seenRefIds.add(data.id);refEventCount++;$('refCount').textContent=refEventCount;$('refStatus').textContent='REF ONLINE';$('refDot').className='dot on';
-    if(data.type==='FOUL'){
-      const against=data.against==='BLUE'?'BLUE':'RED';const award=against==='RED'?'BLUE':'RED';const pts=data.severity==='MAJOR'?(Number($('majorPts').value)||15):(Number($('minorPts').value)||5);const key=award==='RED'?'redPenalty':'bluePenalty';state[key]+=pts;const hist={kind:'penalty',alliance:award,delta:pts,time:Date.now(),refId:data.id};scoreHistory.push(hist);if(data.id)refActions.set(data.id,{type:'FOUL',key,pts,hist});log(`REF ${data.ref||''}: ${data.severity} against ${against} → ${award} +${pts}.`,'ref');
-    } else if(data.type==='CARD'){
-      const key=data.against==='BLUE'?'blueCards':'redCards';const card={color:data.color||'YELLOW',ref:data.ref||'',id:data.id};state[key].push(card);if(data.id)refActions.set(data.id,{type:'CARD',key,card});log(`REF ${data.ref||''}: ${data.color||'YELLOW'} CARD to ${data.against}.`,'ref');
-    } else if(data.type==='REF_UNDO'){
-      const action=refActions.get(data.targetId);
-      if(action?.type==='FOUL'){state[action.key]=Math.max(0,state[action.key]-action.pts);const i=scoreHistory.indexOf(action.hist);if(i>=0)scoreHistory.splice(i,1);refActions.delete(data.targetId);log(`REF undo accepted: reversed ${action.pts} penalty points.`,'ref');}
-      else if(action?.type==='CARD'){const arr=state[action.key];const i=arr.indexOf(action.card);if(i>=0)arr.splice(i,1);refActions.delete(data.targetId);log(`REF undo accepted: card removed.`,'ref');}
-      else log(`REF undo ignored: action ${data.targetId||'unknown'} not found.`,'ref');
-    } else if(data.type==='UNDER_REVIEW'){setScreen('REVIEW');log(`Head Ref placed match under review.`,'ref')}
-    render();syncHub();broadcastState(true);
+    if(data.type==='FOUL'){const against=data.against==='BLUE'?'BLUE':'RED',award=against==='RED'?'BLUE':'RED',pts=data.severity==='MAJOR'?state.balance.majorPts:state.balance.minorPts,key=award==='RED'?'redPenalty':'bluePenalty';state[key]+=pts;const hist={kind:'penalty',key,delta:pts,time:Date.now(),refId:data.id};scoreHistory.push(hist);if(data.id)refActions.set(data.id,{type:'FOUL',key,pts,hist});log(`REF ${data.ref||''}: ${data.severity} against ${against} → ${award} +${pts}.`,'ref')}
+    else if(data.type==='CARD'){const key=data.against==='BLUE'?'blueCards':'redCards',card={color:data.color||'YELLOW',ref:data.ref||'',id:data.id};state[key].push(card);if(data.id)refActions.set(data.id,{type:'CARD',key,card});log(`REF ${data.ref||''}: ${data.color||'YELLOW'} CARD to ${data.against}.`,'ref')}
+    else if(data.type==='REF_UNDO'){const a=refActions.get(data.targetId);if(a?.type==='FOUL'){state[a.key]=Math.max(0,state[a.key]-a.pts);const i=scoreHistory.indexOf(a.hist);if(i>=0)scoreHistory.splice(i,1);refActions.delete(data.targetId)}else if(a?.type==='CARD'){const arr=state[a.key],i=arr.indexOf(a.card);if(i>=0)arr.splice(i,1);refActions.delete(data.targetId)}}
+    else if(data.type==='UNDER_REVIEW')setScreen('REVIEW');render();syncHub();broadcastState(true)
   }
 
-  function determineWinner(){const r=totalRed(),b=totalBlue();state.winner=r===b?'TIE':r>b?'RED':'BLUE'}
-  function setScreen(screen){state.screen=screen;state.underReview=screen==='REVIEW';if(screen==='RESULTS')determineWinner();render();broadcastState(true)}
-  function syncHub(){if(!mqttClient?.connected)return;const m=Math.floor(state.matchTime/60),s=state.matchTime%60;const timeStr=`${m}:${String(s).padStart(2,'0')}`;mqttClient.publish(`frchub/${roomName}/commands`,JSON.stringify({type:'SYNC_TIME',timeStr,phase:state.phase}));mqttClient.publish(`frchub/${roomName}/commands`,JSON.stringify({type:'UPDATE_SCORES',red:totalRed(),blue:totalBlue()}))}
-  function publicState(){return {...state,redScore:totalRed(),blueScore:totalBlue(),matchLabel:matchText(),matchShort:matchShort(),timestamp:Date.now(),seq:++stateSeq}}
-  function broadcastState(retain){$('stateSeq').textContent=stateSeq+1;if(!mqttClient?.connected)return;mqttClient.publish(`frchub/${roomName}/fms/state`,JSON.stringify(publicState()),{retain:!!retain,qos:0})}
-  function render(){
-    $('redScore').textContent=totalRed();$('blueScore').textContent=totalBlue();$('redFuel').textContent=state.redFuel;$('blueFuel').textContent=state.blueFuel;$('redPenalty').textContent=state.redPenalty;$('bluePenalty').textContent=state.bluePenalty;$('rpMini').textContent=state.redPenalty;$('bpMini').textContent=state.bluePenalty;
-    const m=Math.floor(state.matchTime/60),s=state.matchTime%60;$('timer').textContent=`${m}:${String(s).padStart(2,'0')}`;$('gamePhase').textContent=state.phase==='MATCH STARTING'?`MATCH STARTING · ${state.countdown}`:state.phase;$('matchLabel').textContent=matchText();$('matchId').textContent=matchShort();$('hubEvents').textContent=state.rawHubEvents;$('lastChute').textContent=state.lastChute===null?'--':`C${Number(state.lastChute)+1}`;$('lastAssignment').textContent=state.lastAssignment||'--';$('screenState').textContent=state.screen;
-    $('hubMode').textContent=state.phase==='MATCH STARTING'?'HUB LOCKED':state.phase.startsWith('FREE')?'HUB 50 / 50':state.phase.startsWith('RED')?'HUB → RED':state.phase.startsWith('BLUE')?'HUB → BLUE':state.phase.startsWith('MAYHEM')?'HUB MAYHEM 60%':'HUB READY';
-    ['preview','match','review','results'].forEach(x=>$(`p-${x}`).classList.toggle('active',state.screen===x.toUpperCase()));
+  function determineWinner(){const r=score('red'),b=score('blue');state.winner=r===b?'TIE':r>b?'RED':'BLUE';return state.winner}
+  function calcAllianceRp(side){const w=determineWinner(),A=side.toUpperCase(),raw=rawFuel(side),b=state.balance;let rp=w===A?3:w==='TIE'?1:0;const energized=raw>=b.energizedThreshold,supercharged=raw>=b.superchargedThreshold,manual=Number(state.manualBonusRp[side]||0);rp+=(energized?1:0)+(supercharged?1:0)+manual;return{total:rp,win:w===A?3:w==='TIE'?1:0,energized,supercharged,manual}}
+  function resultSnapshot(){determineWinner();return{timestamp:new Date().toISOString(),eventName:state.eventName,matchLabel:matchText(),matchShort:matchShort(),matchType:state.matchType,matchNumber:state.matchNumber,teams:JSON.parse(JSON.stringify(state.teams)),surrogates:JSON.parse(JSON.stringify(state.surrogates)),redScore:score('red'),blueScore:score('blue'),winner:state.winner,redFuelRaw:rawFuel('red'),blueFuelRaw:rawFuel('blue'),redFuelPoints:fuelPoints('red'),blueFuelPoints:fuelPoints('blue'),redAutoFuelRaw:rawFuel('red','AUTO'),blueAutoFuelRaw:rawFuel('blue','AUTO'),redAutoFuelPoints:rawFuel('red','AUTO')*state.balance.autoMultiplier,blueAutoFuelPoints:rawFuel('blue','AUTO')*state.balance.autoMultiplier,redTeleopFuelPoints:fuelPoints('red')-rawFuel('red','AUTO')*state.balance.autoMultiplier,blueTeleopFuelPoints:fuelPoints('blue')-rawFuel('blue','AUTO')*state.balance.autoMultiplier,redPenalty:state.redPenalty,bluePenalty:state.bluePenalty,redRp:calcAllianceRp('red'),blueRp:calcAllianceRp('blue'),autoResult:state.autoResult,shift1Active:state.shift1Active,balance:{...state.balance}}}
+  function finalizeCurrentResult(){if(state.running||state.period==='MATCH_STARTING'){alert('Stop or finish the match before finalizing.');return}const result=resultSnapshot();
+    if(state.eventMode==='regional'&&currentMatchRef?.kind==='qual')finalizeQualResult(currentMatchRef.id,result);
+    else if(state.eventMode==='regional'&&currentMatchRef?.kind==='playoff'){if(result.winner==='TIE'){alert('Playoff match is tied. Correct/resolve the score before advancing the bracket.');return}finalizePlayoffResult(currentMatchRef.key,result)}
+    else{regional.results.push({...result,source:'single'});saveRegionalStore()}
+    exportResultObjectCsv(result,true);state.screen='RESULTS';state.underReview=false;render();broadcastState(true);log(`Result finalized: ${result.redScore}–${result.blueScore} (${result.winner}).`,'sys')
   }
-  function exportSnapshot(){const blob=new Blob([JSON.stringify(publicState(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${matchShort()}-snapshot.json`;a.click();URL.revokeObjectURL(a.href)}
+  function setScreen(screen){state.screen=screen;state.underReview=screen==='REVIEW';if(screen==='RESULTS')determineWinner();render();broadcastState(true)}
+
+  function formatClock(t){const n=Math.max(0,Math.floor(Number(t)||0));return`${Math.floor(n/60)}:${String(n%60).padStart(2,'0')}`}
+  function matchText(){return state.customMatchLabel||`${state.matchType} ${state.matchNumber}${state.matchType==='Qualification'?` of ${state.totalMatches}`:''}`}
+  function matchShort(){if(currentMatchRef?.kind==='playoff')return currentMatchRef.key;if(state.matchType==='Qualification')return`Q${state.matchNumber}`;if(state.matchType==='Practice')return`P${state.matchNumber}`;return`M${state.matchNumber}`}
+  function syncHub(){if(!mqttClient?.connected)return;mqttClient.publish(`frchub/${roomName}/commands`,JSON.stringify({type:'SYNC_TIME',timeStr:formatClock(state.displayTime),phase:state.phase}));mqttClient.publish(`frchub/${roomName}/commands`,JSON.stringify({type:'UPDATE_SCORES',red:score('red'),blue:score('blue')}))}
+  function publicState(){const rr=calcAllianceRp('red'),br=calcAllianceRp('blue');return{...state,fuel:JSON.parse(JSON.stringify(state.fuel)),balance:{...state.balance},broadcast:{...state.broadcast},redScore:score('red'),blueScore:score('blue'),redFuel:rawFuel('red'),blueFuel:rawFuel('blue'),redFuelPoints:fuelPoints('red'),blueFuelPoints:fuelPoints('blue'),redAutoFuel:rawFuel('red','AUTO'),blueAutoFuel:rawFuel('blue','AUTO'),redAutoFuelPoints:rawFuel('red','AUTO')*state.balance.autoMultiplier,blueAutoFuelPoints:rawFuel('blue','AUTO')*state.balance.autoMultiplier,redTeleopFuelPoints:fuelPoints('red')-rawFuel('red','AUTO')*state.balance.autoMultiplier,blueTeleopFuelPoints:fuelPoints('blue')-rawFuel('blue','AUTO')*state.balance.autoMultiplier,redRp:rr,blueRp:br,matchLabel:matchText(),matchShort:matchShort(),timestamp:Date.now(),seq:++stateSeq}}
+  function broadcastState(retain){$('stateSeq').textContent=stateSeq+1;if(!mqttClient?.connected)return;mqttClient.publish(`frchub/${roomName}/fms/state`,JSON.stringify(publicState()),{retain:!!retain,qos:0})}
+
+  function render(){
+    $('redScore').textContent=score('red');$('blueScore').textContent=score('blue');$('redFuel').textContent=rawFuel('red');$('blueFuel').textContent=rawFuel('blue');$('redFuelPts').textContent=fuelPoints('red');$('blueFuelPts').textContent=fuelPoints('blue');$('redPenalty').textContent=state.redPenalty;$('bluePenalty').textContent=state.bluePenalty;$('rpMini').textContent=state.redPenalty;$('bpMini').textContent=state.bluePenalty;$('redBonusMini').textContent=state.manualBonusRp.red;$('blueBonusMini').textContent=state.manualBonusRp.blue;
+    $('timer').textContent=formatClock(state.displayTime);$('gamePhase').textContent=state.period==='MATCH_STARTING'?`MATCH STARTING · ${state.countdown}`:state.phase;$('matchLabel').textContent=matchText();$('matchId').textContent=matchShort();$('screenState').textContent=state.screen;$('periodState').textContent=state.period;$('hubEvents').textContent=state.rawHubEvents;$('lastChute').textContent=state.lastChute==null?'—':`C${Number(state.lastChute)+1}`;$('lastAssignment').textContent=state.lastAssignment||'—';
+    $('hubMode').textContent=state.period==='PREMATCH'?'HUB READY':state.period==='MATCH_STARTING'?'HUB LOCKED':state.activeAlliance==='BOTH'?(state.period==='ENDGAME'?`MAYHEM ${state.balance.mayhemBias}%`:'HUB BOTH / 50-50'):state.activeAlliance==='RED'?'HUB → RED':state.activeAlliance==='BLUE'?'HUB → BLUE':'HUB READY';
+    $('autoDecision').textContent=state.shift1Active?`AUTO ${state.autoResult}${state.autoResult==='TIE'?` · FMS selected ${state.autoReference}`:''} · Shift 1 active ${state.shift1Active}`:'AUTO decision pending';
+    PERIODS.forEach(p=>{const el=$(`p-${p.toLowerCase()}`);if(!el)return;el.classList.toggle('active',state.period===p);const idx=PERIODS.indexOf(state.period),pi=PERIODS.indexOf(p);el.classList.toggle('done',idx>pi||state.period==='COMPLETE')});
+    $('startBtn').disabled=!!(timelineInterval||countdownInterval);
+  }
+
+  /* ---------------- REGIONAL MANAGER ---------------- */
+  function regionalConfigChanged(){regional.teamsPerAlliance=Number($('regionalTeamsPerAlliance').value)||2;$('matchFormat').value=String(regional.teamsPerAlliance);$('playoffTeamCount').value=regional.teamsPerAlliance;regional.playoffAlliances.forEach(a=>{a.teams=(a.teams||[]).slice(0,regional.teamsPerAlliance)});saveRegionalStore();renderManualTeamInputs();renderAllianceBuilder();updateQualSuggestion()}
+  function updateQualSuggestion(){regional.targetAppearances=Number($('regionalTargetAppearances').value)||8;const n=regional.roster.filter(t=>t.id).length,k=Number($('regionalTeamsPerAlliance').value)||2,slots=2*k,suggested=n>=slots?Math.ceil(n*regional.targetAppearances/slots):0;$('qualSuggestion').value=suggested||'—';if(!regional.schedule.length&&suggested)$('regionalQualCount').value=suggested;const chosen=Math.max(0,num('regionalQualCount',suggested));$('qualMath').innerHTML=n<slots?`Need at least <strong>${slots}</strong> teams for a ${k}v${k} match.`:`Suggested <strong>${suggested}</strong> qualification matches ≈ ${((suggested*slots)/n).toFixed(1)} appearances/team. Your current ${chosen||suggested} matches would average ${(((chosen||suggested)*slots)/n).toFixed(1)} appearances/team.`;saveRegionalStore()}
+  function addRosterTeam(id='',name=''){regional.roster.push({id:String(id),name:String(name)});saveRegionalStore();renderRoster();updateQualSuggestion()}
+  function removeRosterTeam(i){regional.roster.splice(i,1);saveRegionalStore();renderRoster();updateQualSuggestion()}
+  function rosterChanged(i,key,value){regional.roster[i][key]=value.trim();saveRegionalStore();updateQualSuggestion();renderAllianceBuilder()}
+  function renderRoster(){const body=$('rosterBody');body.innerHTML=regional.roster.length?regional.roster.map((t,i)=>`<tr><td><input value="${escAttr(t.id)}" placeholder="2976" oninput="rosterChanged(${i},'id',this.value)"></td><td><input value="${escAttr(t.name)}" placeholder="Team name" oninput="rosterChanged(${i},'name',this.value)"></td><td><button class="btn xs red" onclick="removeRosterTeam(${i})">×</button></td></tr>`).join(''):`<tr><td colspan="3" class="empty">Add the teams participating in this event.</td></tr>`}
+  function rosterMap(){const m={};regional.roster.forEach(t=>{if(t.id)m[t.id]=t.name||`Team ${t.id}`});return m}
+  function uniqueRosterIds(){return[...new Set(regional.roster.map(t=>t.id.trim()).filter(Boolean))]}
+  function hashString(s){let h=2166136261;for(const ch of String(s)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+  function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+  function shuffle(arr,rng=Math.random){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function pairKey(a,b){return[a,b].sort().join('|')}
+  function generateQualSchedule(){
+    regional.eventName=$('regionalEventName').value.trim()||'REBUILT Regional';regional.teamsPerAlliance=Number($('regionalTeamsPerAlliance').value)||2;regional.targetAppearances=Number($('regionalTargetAppearances').value)||8;regional.qualCount=Math.max(1,num('regionalQualCount',1));const teams=uniqueRosterIds(),k=regional.teamsPerAlliance,slots=2*k;if(teams.length<slots){alert(`Need at least ${slots} unique teams.`);return}if(!confirm('Generate a new qualification schedule? Existing qualification results and schedule will be replaced.'))return;
+    const rng=mulberry32(hashString(`${regional.eventName}|${teams.join(',')}|${regional.qualCount}|${Date.now()}`)),apps=Object.fromEntries(teams.map(t=>[t,0])),red=Object.fromEntries(teams.map(t=>[t,0])),blue=Object.fromEntries(teams.map(t=>[t,0])),last=Object.fromEntries(teams.map(t=>[t,-99])),partners=new Map(),opponents=new Map();const schedule=[];
+    for(let match=1;match<=regional.qualCount;match++){
+      let best=null,bestCost=Infinity;
+      for(let attempt=0;attempt<260;attempt++){
+        const scored=teams.map(t=>{const gap=match-last[t],recent=gap<=1?120:gap===2?55:gap===3?18:0;return{t,s:apps[t]*120+recent+rng()*55}}).sort((a,b)=>a.s-b.s);let selected=scored.slice(0,Math.min(teams.length,slots+Math.max(2,k))).map(x=>x.t);selected=shuffle(selected,rng).slice(0,slots);if(new Set(selected).size<slots)continue;selected=shuffle(selected,rng);const rr=selected.slice(0,k),bb=selected.slice(k);let cost=0;selected.forEach(t=>cost+=apps[t]*18);rr.forEach(t=>cost+=Math.abs((red[t]+1)-blue[t])*5);bb.forEach(t=>cost+=Math.abs(red[t]-(blue[t]+1))*5);for(let i=0;i<k;i++)for(let j=i+1;j<k;j++){cost+=(partners.get(pairKey(rr[i],rr[j]))||0)*42;cost+=(partners.get(pairKey(bb[i],bb[j]))||0)*42}for(const r of rr)for(const b of bb)cost+=(opponents.get(pairKey(r,b))||0)*18;if(cost<bestCost){bestCost=cost;best={red:rr,blue:bb}}}
+      if(!best){best={red:shuffle(teams,rng).slice(0,k),blue:shuffle(teams,rng).slice(k,2*k)}}
+      schedule.push({id:`Q${match}`,number:match,red:best.red,blue:best.blue,surrogates:[],status:'scheduled',result:null});[...best.red,...best.blue].forEach(t=>{apps[t]++;last[t]=match});best.red.forEach(t=>red[t]++);best.blue.forEach(t=>blue[t]++);for(let i=0;i<k;i++)for(let j=i+1;j<k;j++){partners.set(pairKey(best.red[i],best.red[j]),(partners.get(pairKey(best.red[i],best.red[j]))||0)+1);partners.set(pairKey(best.blue[i],best.blue[j]),(partners.get(pairKey(best.blue[i],best.blue[j]))||0)+1)}for(const r of best.red)for(const b of best.blue)opponents.set(pairKey(r,b),(opponents.get(pairKey(r,b))||0)+1)
+    }
+    // FRC-style surrogate marking when total slots cannot divide evenly across teams.
+    const base=Math.floor((regional.qualCount*slots)/teams.length),counts=Object.fromEntries(teams.map(t=>[t,0]));schedule.forEach(m=>[...m.red,...m.blue].forEach(t=>counts[t]++));teams.forEach(t=>{let extra=Math.max(0,counts[t]-base);for(let i=schedule.length-1;i>=0&&extra>0;i--){const m=schedule[i];if((m.red.includes(t)||m.blue.includes(t))&&!m.surrogates.includes(t)){m.surrogates.push(t);extra--}}});
+    regional.schedule=schedule;regional.results=regional.results.filter(r=>r.matchType!=='Qualification');regional.playoffResults={};regional.champion=null;saveRegionalStore();renderRegional();log(`Generated ${schedule.length} qualification matches for ${teams.length} teams.`,'sys')
+  }
+  function renderSchedule(){const body=$('scheduleBody'),map=rosterMap();$('scheduleSummary').textContent=regional.schedule.length?`${regional.schedule.length} quals · ${regional.schedule.filter(m=>m.status==='final').length} final`:'No schedule';body.innerHTML=regional.schedule.length?regional.schedule.map(m=>{const fmt=arr=>arr.map(t=>`${m.surrogates.includes(t)?'<span class="surrogate">★</span>':''}<b>${escapeHtml(t)}</b> ${escapeHtml(map[t]||'')}`).join(' · ');return`<tr class="schedule-row ${m.status==='final'?'final':''} ${currentMatchRef?.kind==='qual'&&currentMatchRef.id===m.id?'loaded':''}"><td><b>${m.number}</b></td><td>${fmt(m.red)}</td><td>${fmt(m.blue)}</td><td>${m.status==='final'?`${m.result.redScore}–${m.result.blueScore}`:'Scheduled'}</td><td><button class="btn xs ${m.status==='final'?'ghost':'blue'}" onclick="loadQualMatch('${m.id}')">Load</button></td></tr>`}).join(''):`<tr><td colspan="5" class="empty">Generate a qualification schedule from the roster.</td></tr>`}
+  function loadQualMatch(id){const m=regional.schedule.find(x=>x.id===id);if(!m)return;const names=rosterMap();state.eventMode='regional';state.eventName=regional.eventName;state.matchType='Qualification';state.matchNumber=m.number;state.totalMatches=regional.schedule.length;state.customMatchLabel='';state.teams={red:[...m.red],blue:[...m.blue]};state.teamMeta=buildTeamMeta(m.red,m.blue,names);state.surrogates={red:m.red.filter(t=>m.surrogates.includes(t)),blue:m.blue.filter(t=>m.surrogates.includes(t))};currentMatchRef={kind:'qual',id};$('eventMode').value='regional';$('headerEvent').textContent='Regional Mode';$('eventName').value=state.eventName;$('matchType').value='Qualification';$('matchNumber').value=m.number;$('totalMatches').value=regional.schedule.length;$('matchFormat').value=String(regional.teamsPerAlliance);renderManualTeamInputs({red:m.red.map(id=>({id,name:names[id]})),blue:m.blue.map(id=>({id,name:names[id]}))});refreshRanksForState();resetMatch(true);showView('match');$('loadedMatchNote').innerHTML=`Loaded <strong>${m.id}</strong> from Regional schedule.${m.surrogates.length?` Surrogate(s): <span class="surrogate">${m.surrogates.join(', ')}</span>`:''}`;log(`Loaded ${m.id} from Regional schedule.`,'sys')}
+  function loadNextUnplayedQual(){const m=regional.schedule.find(x=>x.status!=='final');if(m)loadQualMatch(m.id);else alert('All qualification matches are finalized.')}
+
+  function computeStandings(excludeResultId=null){const teams=uniqueRosterIds(),stats={};teams.forEach((t,i)=>stats[t]={id:t,name:rosterMap()[t]||`Team ${t}`,matches:0,w:0,l:0,t:0,rp:0,scoreNoPenalty:0,autoFuel:0,totalFuel:0,random:hashString(`${regional.eventName}|${t}`)});regional.schedule.forEach(m=>{if(m.status!=='final'||!m.result||m.id===excludeResultId)return;const r=m.result;['red','blue'].forEach(side=>{const A=side==='red'?'RED':'BLUE',opp=side==='red'?'BLUE':'RED',rp=r[`${side}Rp`]?.total??0,scoreNP=r[`${side}FuelPoints`]??0,auto=r[`${side}AutoFuelRaw`]??0,total=r[`${side}FuelRaw`]??0;(m[side]||[]).forEach(t=>{if(!stats[t]||m.surrogates.includes(t))return;const s=stats[t];s.matches++;s.rp+=rp;s.scoreNoPenalty+=scoreNP;s.autoFuel+=auto;s.totalFuel+=total;if(r.winner===A)s.w++;else if(r.winner==='TIE')s.t++;else s.l++})})});const list=Object.values(stats).map(s=>({...s,rs:s.matches?s.rp/s.matches:0,avgScore:s.matches?s.scoreNoPenalty/s.matches:0,avgAuto:s.matches?s.autoFuel/s.matches:0,avgFuel:s.matches?s.totalFuel/s.matches:0}));list.sort((a,b)=>b.rs-a.rs||b.avgScore-a.avgScore||b.avgAuto-a.avgAuto||b.avgFuel-a.avgFuel||a.random-b.random);list.forEach((s,i)=>s.rank=i+1);return list}
+  function finalizeQualResult(id,result){const m=regional.schedule.find(x=>x.id===id);if(!m)return;const before=Object.fromEntries(computeStandings(id).map(x=>[x.id,x.rank]));m.result=result;m.status='final';regional.results=regional.results.filter(r=>r.sourceId!==id);regional.results.push({...result,source:'regional-qualification',sourceId:id});saveRegionalStore();const after=computeStandings();regional.rankMoves={};after.forEach(x=>regional.rankMoves[x.id]=(before[x.id]||x.rank)-x.rank);saveRegionalStore();state.teamRanks=Object.fromEntries(after.map(x=>[x.id,x.rank]));state.rankMoves={...regional.rankMoves};renderRegional()}
+  function refreshRanksForState(){const standings=computeStandings();state.teamRanks=Object.fromEntries(standings.map(x=>[x.id,x.rank]));state.rankMoves={...regional.rankMoves}}
+  function renderRankings(){const list=computeStandings(),body=$('rankingsBody');body.innerHTML=list.length?list.map(s=>{const mv=regional.rankMoves?.[s.id]||0,cls=mv>0?'rank-up':mv<0?'rank-down':'rank-flat',arrow=mv>0?'↑':mv<0?'↓':'—';return`<tr><td><span class="ranknum">${s.rank}</span> <span class="${cls}">${arrow}</span></td><td><b>${escapeHtml(s.id)}</b><br><span style="color:#8193a7">${escapeHtml(s.name)}</span></td><td>${s.w}-${s.l}-${s.t}</td><td class="metric"><b>${s.rs.toFixed(2)}</b></td><td class="metric">${s.avgScore.toFixed(1)}</td><td class="metric">${s.avgAuto.toFixed(1)}</td><td class="metric">${s.avgFuel.toFixed(1)}</td></tr>`}).join(''):`<tr><td colspan="7" class="empty">Standings appear after roster/schedule creation.</td></tr>`}
+
+  function teamOptions(selected=''){return`<option value="">— select —</option>`+regional.roster.filter(t=>t.id).map(t=>`<option value="${escAttr(t.id)}" ${t.id===selected?'selected':''}>${escapeHtml(t.id)} · ${escapeHtml(t.name||'Team')}</option>`).join('')}
+  function renderAllianceBuilder(){const k=Number($('regionalTeamsPerAlliance').value)||regional.teamsPerAlliance||2;$('playoffTeamCount').value=k;regional.playoffAlliances=Array.from({length:8},(_,i)=>regional.playoffAlliances?.[i]||{seed:i+1,teams:[]});$('allianceBuilder').innerHTML=regional.playoffAlliances.map((a,i)=>`<div class="alliance-card"><h4>Alliance ${i+1}</h4>${Array.from({length:k},(_,slot)=>`<select onchange="setPlayoffAllianceTeam(${i},${slot},this.value)">${teamOptions(a.teams?.[slot]||'')}</select>`).join('')}</div>`).join('');renderPlayoffMatches()}
+  function setPlayoffAllianceTeam(ai,slot,val){if(!regional.playoffAlliances[ai])regional.playoffAlliances[ai]={seed:ai+1,teams:[]};regional.playoffAlliances[ai].teams[slot]=val;saveRegionalStore()}
+  function seedAllianceCaptains(){const ranks=computeStandings();for(let i=0;i<8;i++){regional.playoffAlliances[i]=regional.playoffAlliances[i]||{seed:i+1,teams:[]};regional.playoffAlliances[i].teams[0]=ranks[i]?.id||''}saveRegionalStore();renderAllianceBuilder()}
+  const PLAYOFF_DEFS=[
+    {key:'M1',label:'Upper Bracket - Round 1 - Match 1',r:'A1',b:'A8'},{key:'M2',label:'Upper Bracket - Round 1 - Match 2',r:'A4',b:'A5'},{key:'M3',label:'Upper Bracket - Round 1 - Match 3',r:'A2',b:'A7'},{key:'M4',label:'Upper Bracket - Round 1 - Match 4',r:'A3',b:'A6'},
+    {key:'M5',label:'Lower Bracket - Round 2 - Match 5',r:'L1',b:'L2'},{key:'M6',label:'Lower Bracket - Round 2 - Match 6',r:'L3',b:'L4'},{key:'M7',label:'Upper Bracket - Round 2 - Match 7',r:'W1',b:'W2'},{key:'M8',label:'Upper Bracket - Round 2 - Match 8',r:'W3',b:'W4'},
+    {key:'M9',label:'Lower Bracket - Round 3 - Match 9',r:'L7',b:'W6'},{key:'M10',label:'Lower Bracket - Round 3 - Match 10',r:'L8',b:'W5'},{key:'M11',label:'Upper Bracket - Round 4 - Match 11',r:'W7',b:'W8'},{key:'M12',label:'Lower Bracket - Round 4 - Match 12',r:'W10',b:'W9'},{key:'M13',label:'Lower Bracket - Round 5 - Match 13',r:'L11',b:'W12'},
+    {key:'F1',label:'Final 1',r:'W11',b:'W13'},{key:'F2',label:'Final 2',r:'W11',b:'W13'},{key:'F3',label:'Final Tiebreaker',r:'W11',b:'W13'}
+  ];
+  function buildPlayoffBracket(){const k=regional.teamsPerAlliance;for(let i=0;i<8;i++){const a=regional.playoffAlliances[i];if(!a||a.teams.filter(Boolean).length<k){alert(`Alliance ${i+1} needs ${k} teams.`);return}}const used=regional.playoffAlliances.flatMap(a=>a.teams.filter(Boolean));if(new Set(used).size!==used.length&&!confirm('A team appears on more than one playoff alliance. Continue anyway?'))return;regional.playoffResults={};regional.champion=null;saveRegionalStore();renderPlayoffMatches();log('2026-style 8-alliance double-elimination bracket built.','sys')}
+  function sourceAlliance(src){if(!src)return null;if(src.startsWith('A')){const seed=Number(src.slice(1)),a=regional.playoffAlliances?.[seed-1];return a&&a.teams?.filter(Boolean).length>=regional.teamsPerAlliance?seed:null}const kind=src[0],key=`M${src.slice(1)}`,res=regional.playoffResults[key];if(!res)return null;return kind==='W'?res.winnerSeed:res.loserSeed}
+  function finalSeriesWins(){const wins={};['F1','F2','F3'].forEach(k=>{const r=regional.playoffResults[k];if(r?.winnerSeed)wins[r.winnerSeed]=(wins[r.winnerSeed]||0)+1});return wins}
+  function playoffResolved(def){const r=sourceAlliance(def.r),b=sourceAlliance(def.b);if(def.key==='F3'){const wins=finalSeriesWins();if(Object.values(wins).some(v=>v>=2))return{r,b,needed:false};const f1=regional.playoffResults.F1,f2=regional.playoffResults.F2;if(!f1||!f2)return{r,b,needed:false};return{r,b,needed:f1.winnerSeed!==f2.winnerSeed}}return{r,b,needed:true}}
+  function allianceName(seed){if(!seed)return'TBD';return`Alliance ${seed}`}
+  function renderPlayoffMatches(){const root=$('playoffList');if(!root)return;const built=Object.keys(regional.playoffResults||{}).length||regional.playoffAlliances.every(a=>a?.teams?.filter(Boolean).length>=regional.teamsPerAlliance);root.innerHTML=PLAYOFF_DEFS.map(def=>{const x=playoffResolved(def),res=regional.playoffResults[def.key],ready=x.r&&x.b&&x.needed!==false;const hide=def.key==='F3'&&x.needed===false;return`<div class="playoff-row ${res?'done':''} ${hide?'hidden':''}"><div><b>${def.key}</b><br><span style="color:#7f92a6">${escapeHtml(def.label)}</span></div><div class="seed">${allianceName(x.r)}</div><div style="text-align:center">vs</div><div class="seed">${allianceName(x.b)}</div><div>${res?`${res.result.redScore}–${res.result.blueScore}`:`<button class="btn xs ${ready?'blue':'ghost'}" ${ready?'':'disabled'} onclick="loadPlayoffMatch('${def.key}')">Load</button>`}</div></div>`}).join('');const champ=getChampion();$('championBanner').classList.toggle('show',!!champ);$('championBanner').textContent=champ?`EVENT CHAMPION · ALLIANCE ${champ}`:''}
+  function loadPlayoffMatch(key){const def=PLAYOFF_DEFS.find(x=>x.key===key),x=playoffResolved(def);if(!def||!x.r||!x.b)return;const ar=regional.playoffAlliances[x.r-1],ab=regional.playoffAlliances[x.b-1],names=rosterMap();state.eventMode='regional';state.eventName=regional.eventName;state.matchType='Playoff';state.matchNumber=Number(key.replace(/\D/g,''))||1;state.totalMatches=13;state.customMatchLabel=def.label;state.teams={red:ar.teams.filter(Boolean).slice(0,regional.teamsPerAlliance),blue:ab.teams.filter(Boolean).slice(0,regional.teamsPerAlliance)};state.teamMeta=buildTeamMeta(state.teams.red,state.teams.blue,names);state.surrogates={red:[],blue:[]};state.teamRanks={};state.rankMoves={};currentMatchRef={kind:'playoff',key,redSeed:x.r,blueSeed:x.b};$('eventMode').value='regional';$('headerEvent').textContent='Regional Mode';$('eventName').value=state.eventName;$('matchType').value='Playoff';$('matchFormat').value=String(regional.teamsPerAlliance);renderManualTeamInputs({red:state.teams.red.map(id=>({id,name:names[id]})),blue:state.teams.blue.map(id=>({id,name:names[id]}))});resetMatch(true);showView('match');$('loadedMatchNote').innerHTML=`Loaded <strong>${def.label}</strong> · Alliance ${x.r} vs Alliance ${x.b}.`;log(`Loaded playoff ${key}.`,'sys')}
+  function finalizePlayoffResult(key,result){const ref=currentMatchRef,winnerSeed=result.winner==='RED'?ref.redSeed:ref.blueSeed,loserSeed=result.winner==='RED'?ref.blueSeed:ref.redSeed;regional.playoffResults[key]={winnerSeed,loserSeed,result};regional.results=regional.results.filter(r=>r.sourceId!==key);regional.results.push({...result,source:'regional-playoff',sourceId:key,winnerSeed,loserSeed});regional.champion=getChampion();saveRegionalStore();renderPlayoffMatches()}
+  function getChampion(){const wins=finalSeriesWins();const found=Object.entries(wins).find(([,v])=>v>=2);return found?Number(found[0]):regional.champion||null}
+
+  function renderRegional(){
+    $('regionalEventName').value=regional.eventName||'REBUILT Human Player Regional';$('regionalTeamsPerAlliance').value=String(regional.teamsPerAlliance||2);$('regionalTargetAppearances').value=String(regional.targetAppearances||8);$('regionalQualCount').value=regional.qualCount||12;$('playoffTeamCount').value=regional.teamsPerAlliance||2;renderRoster();updateQualSuggestion();renderSchedule();renderRankings();renderAllianceBuilder()
+  }
+  function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+
+  /* ---------------- CSV / BACKUP ---------------- */
+  function csvEscape(v){const s=String(v??'');return/[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s}
+  function downloadText(name,text,type='text/plain'){const blob=new Blob([text],{type}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+  function exportTeamsCsv(){const rows=[['team','name'],...regional.roster.map(t=>[t.id,t.name])];downloadText('rebuilt-teams.csv',rows.map(r=>r.map(csvEscape).join(',')).join('\n'),'text/csv')}
+  function parseCsv(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(q){if(c==='"'&&n==='"'){cell+='"';i++}else if(c==='"')q=false;else cell+=c}else{if(c==='"')q=true;else if(c===','){row.push(cell);cell=''}else if(c==='\n'){row.push(cell);rows.push(row);row=[];cell=''}else if(c!=='\r')cell+=c}}row.push(cell);if(row.some(x=>x!==''))rows.push(row);return rows}
+  async function importTeamsCsv(e){const f=e.target.files?.[0];if(!f)return;const rows=parseCsv(await f.text());const start=rows[0]?.[0]?.toLowerCase().includes('team')?1:0;regional.roster=rows.slice(start).filter(r=>r[0]?.trim()).map(r=>({id:r[0].trim(),name:(r[1]||'').trim()}));saveRegionalStore();renderRegional();e.target.value=''}
+  function exportScheduleCsv(){const rows=[['match','red','blue','surrogates','status'],...regional.schedule.map(m=>[m.id,m.red.join('|'),m.blue.join('|'),m.surrogates.join('|'),m.status])];downloadText('rebuilt-qualification-schedule.csv',rows.map(r=>r.map(csvEscape).join(',')).join('\n'),'text/csv')}
+  function resultCsvRows(results){return[['timestamp','event','match','type','redTeams','blueTeams','redScore','blueScore','winner','redRP','blueRP','redAutoFuelRaw','blueAutoFuelRaw','redFuelRaw','blueFuelRaw','redFuelPoints','blueFuelPoints','redPenalty','bluePenalty','shift1Active'],...results.map(r=>[r.timestamp,r.eventName,r.matchLabel,r.matchType,r.teams.red.join('|'),r.teams.blue.join('|'),r.redScore,r.blueScore,r.winner,r.redRp?.total??'',r.blueRp?.total??'',r.redAutoFuelRaw,r.blueAutoFuelRaw,r.redFuelRaw,r.blueFuelRaw,r.redFuelPoints,r.blueFuelPoints,r.redPenalty,r.bluePenalty,r.shift1Active])]} 
+  function exportResultObjectCsv(result,auto=false){const rows=resultCsvRows([result]);downloadText(`${result.matchShort||matchShort()}-result.csv`,rows.map(r=>r.map(csvEscape).join(',')).join('\n'),'text/csv')}
+  function exportCurrentResultCsv(){exportResultObjectCsv(resultSnapshot())}
+  function exportAllResultsCsv(){const rows=resultCsvRows(regional.results||[]);downloadText('rebuilt-event-results.csv',rows.map(r=>r.map(csvEscape).join(',')).join('\n'),'text/csv')}
+  function exportEventBackup(){regional.eventName=$('regionalEventName').value.trim()||regional.eventName;saveRegionalStore();downloadText(`rebuilt-event-${Date.now()}.json`,JSON.stringify({version:4,regional,tuning:{balance:state.balance,broadcast:state.broadcast}},null,2),'application/json')}
+  async function importEventBackup(e){const f=e.target.files?.[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!x.regional)throw new Error('Not a REBUILT event backup');regional={...emptyRegional(),...x.regional};if(x.tuning?.balance)Object.assign(state.balance,x.tuning.balance);if(x.tuning?.broadcast)Object.assign(state.broadcast,x.tuning.broadcast);saveRegionalStore();applyTuningToInputs();saveTuning();renderRegional();alert('Event backup restored.')}catch(err){alert(`Could not restore: ${err.message}`)}e.target.value=''}
+  function clearRegionalEvent(){if(!confirm('Clear the Regional roster, schedule, results and playoff bracket from this browser?'))return;regional=emptyRegional();saveRegionalStore();renderRegional()}
+  function exportSnapshot(){downloadText(`${matchShort()}-snapshot.json`,JSON.stringify(publicState(),null,2),'application/json')}
+
   function clearLog(){$('logBox').innerHTML=''}
   function log(msg,cls=''){const d=document.createElement('div');d.className=cls;d.textContent=`[${clock()}] ${msg}`;$('logBox').appendChild(d);$('logBox').scrollTop=$('logBox').scrollHeight}
 
-  loadPreset();
-  const launchRoom = new URLSearchParams(location.search).get('room');
-  if (launchRoom) $('roomInput').value = launchRoom.trim().toUpperCase();
-  applySetup();connectNetwork();
+  // Startup
+  renderManualTeamInputs();loadQuickPreset();loadTuning();renderManualTeamInputs(getManualTeams());renderRegional();
+  const launchRoom=new URLSearchParams(location.search).get('room');$('roomInput').value=launchRoom?cleanRoom(launchRoom):(localStorage.getItem('rebuiltFmsRoom')||'HUB1');
+  state.eventName=$('eventName').value.trim()||state.eventName;state.eventMode=$('eventMode').value;render();connectNetwork();
 </script>
 </body>
 </html>
